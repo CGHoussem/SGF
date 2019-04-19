@@ -1,0 +1,6 @@
+# Visual Code Waste
+.vscode
+
+# C Executables
+*.o
+
