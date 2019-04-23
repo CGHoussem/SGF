@@ -1,6 +1,8 @@
 #ifndef STRUCT_SGF
 #define STRUCT_SGF
 
+#include <time.h>
+
 typedef struct 
 {
 	char permissions[9] = {1,1,1,1,0,0,1,0,0};  // rwxr--r--
@@ -11,24 +13,24 @@ typedef struct
 	inode* inode_suivant;
 } inode;
 
-typedef union{
-	struct bloc_donnees;
-	struct bloc_rep;
-} bloc;
-
-typedef struct{
-	char* nom;
-	inode* inode;
-} index;
-
 typedef struct {
 	char donnees[1024];
 	int taille_fichier;
 } bloc_donnees;
 
 typedef struct {
-index* index;
+	index* index;
 } bloc_rep;
+
+typedef union{
+	bloc_donnees b_donnees;
+	bloc_rep b_repertoire;
+} bloc;
+
+typedef struct{
+	char* nom;
+	inode* inode;
+} index;
 
 typedef struct{
 	inode* inodes;	//1er inode
