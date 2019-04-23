@@ -4,3 +4,4 @@
 #include "primitive.h"
 #include "command_shell.h"
 #include "save_load_SGF.h"
+#include <time.h>
