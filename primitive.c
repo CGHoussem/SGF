@@ -6,5 +6,4 @@
 #include "save_load_SGF.h"
 #include <time.h>
 
-//test --Solenn
-// commentaire bidon
+

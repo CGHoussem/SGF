@@ -4,45 +4,45 @@
 #include <time.h>
 
 typedef struct index index;
-typedef struct bloc_donnees bloc_donnees;
-typedef struct bloc_repertoire bloc_repertoire;
-typedef union bloc bloc;
+typedef struct block_data block_data;
+typedef struct block_directory block_directory;
+typedef union block block;
 typedef struct inode inode;
-typedef struct disque disque;
+typedef struct disk disk;
 
 struct index {
-	char* nom;
-	inode* inode;
+	char* name;
+	inode* p_inode;
 };
 
-struct bloc_donnees {
-	char donnees[1024];
-	int taille_fichier;
+struct block_data {
+	char data[1024];
+	int size;
 };
 
-struct bloc_repertoire {
-	index* index;
+struct bloc_directory {
+	index* tab_index;
 };
 
-union bloc {
-	bloc_donnees b_donnees;
-	bloc_repertoire b_repertoire;
+union block {
+	block_data b_data;
+	block_directory b_directory;
 };
 
 struct inode {
 	char permissions[9]; // rwxr--r-- {1,1,1,1,0,0,1,0,0}
-	int typefichier; // 1 = texte, 2 = binaire, 3 = repertoire
+	int type; // 1 = text, 2 = binary, 3 = directory
 	time_t date_creation;
 	time_t date_modification;
-	bloc bloc;
-	inode* inode_suivant;
+	block p_block;
+	inode* next_inode;
 };
 
-struct disque {
-	inode* inodes;	//1er inode
+struct disk {
+	inode* inodes;	//1st inode
 	int nb_inode;
-	bloc* blocs; //1er bloc
-	int nb_bloc;
+	block* blocks; //1st block
+	int nb_block;
 };
 
 #endif
