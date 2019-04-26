@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -g
-OBJS = save_load.o primitives.o command_shell.o
+OBJS = save_load.o primitives.o command_shell.o main.o
 
 all: program
 
