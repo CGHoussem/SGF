@@ -14,7 +14,6 @@ int main(int argc, char** argv){
 	
 	free(disk.blocks->b_directory->tab_index);
 	free(disk.blocks->b_directory);
-    
 
     return EXIT_SUCCESS;
 }

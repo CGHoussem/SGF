@@ -18,7 +18,7 @@ void format_disk(Disk* disk){
 	disk->nb_block=1;
 	
 	disk->blocks->b_directory->tab_index[1].inode=&inode;//change the inode of the directory ".."
-	
+	printf("The disk has been successuflly formatted!\n");
 }
 
 Inode mkdir(char* name,Inode prev_inode){
@@ -29,7 +29,10 @@ Inode mkdir(char* name,Inode prev_inode){
 	inode.type=3; //directory
 	inode.date_creation=time(NULL);
 	inode.date_modification=time(NULL);
+	
+	inode.tab_block = (Block*) malloc(sizeof(Block));
 	inode.tab_block->b_directory=allocation_tab_block_directory(1);
+
 	init_block_directory(inode.tab_block->b_directory,inode,prev_inode);
 	inode.next_inode=NULL;
 	
@@ -57,7 +60,6 @@ void init_block_directory(Block_directory* block,Inode inode,Inode prev_inode){
 	block->tab_index[1].inode=&prev_inode;
 	
 	block->next_block=NULL;
-	
 }
 
 Index* allocation_index(int size){
