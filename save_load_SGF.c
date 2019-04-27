@@ -6,6 +6,7 @@
 #include "primitives.h"
 #include "command_shell.h"
 #include "save_load_SGF.h"
+#include "constants.h"
 
 void format_disk(Disk* disk){
 	Inode inode_null, inode;
@@ -19,6 +20,34 @@ void format_disk(Disk* disk){
 	
 	disk->blocks->b_directory->tab_index[1].inode=&inode;//change the inode of the directory ".."
 	printf("The disk has been successuflly formatted!\n");
+}
+
+int save_disk(Disk disk){
+	FILE *file = fopen(DISK_FILE_NAME, "wb");
+
+	if (file == NULL){
+		printf("File '%s' couldn't be opened!\n", DISK_FILE_NAME);
+		return 0;
+	}
+
+	if (fwrite(&disk, sizeof(Disk), 1, file) <= 0)
+		return 0;
+		
+	fclose(file);
+	return 1;
+}
+
+int load_disk(Disk* disk){
+	FILE *file = fopen(DISK_FILE_NAME, "rb");
+	if (file == NULL){
+		printf("File '%s' not found!\n", DISK_FILE_NAME);
+		return 0;
+	}
+	if (fread(disk, sizeof(Disk), 1, file) <= 0)
+		return 0;
+
+	fclose(file);
+	return 1;
 }
 
 Inode mkdir(char* name,Inode prev_inode){

@@ -1,6 +1,7 @@
 #ifndef STRUCT_SGF
 #define STRUCT_SGF
 
+#include "constants.h"
 #include <time.h>
 
 typedef struct Index Index;
@@ -11,12 +12,12 @@ typedef struct Inode Inode;
 typedef struct Disk Disk;
 
 struct Index {
-	char name[20];
+	char name[MAX_FILE_NAME];
 	Inode* inode;
 };
 
 struct Block_data {
-	char data[1024];
+	char data[BUFFER_SIZE];
 	int size;
 	Block* next_block;
 };
@@ -32,7 +33,7 @@ union Block {
 };
 
 struct Inode {
-	char name[20];
+	char name[MAX_FILE_NAME];
 	char permissions[9]; // rwxr--r-- {1,1,1,1,0,0,1,0,0}
 	int type; // 1 = text, 2 = binary, 3 = directory
 	time_t date_creation;
