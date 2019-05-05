@@ -110,3 +110,61 @@ void init_permissions(char permissions[9]){
 	permissions[7]='-';
 	permissions[8]='-';
 }
+
+void free_inode(Disk* disk,Inode* inode, Inode* prev_inode){
+	prev_inode->next_inode=inode->next_inode;
+	
+	if(inode->type==3){ //directory
+		free_block_directory(disk,inode->tab_block);
+	}
+	else{
+		free_block_data(disk,inode->tab_block);
+	}
+	
+	free(inode);
+	
+	disk->nb_inode--;
+}
+
+void free_block_directory(Disk* disk, Block* block){
+	//Block* prev_block=search_prev_block(disk->blocks,block);
+	
+	//Comment gérer le fait qu'on connaisse pas la nature du bloc précédent ? --Solenn
+	
+	//prev_block->next_block=block->next_block;
+	
+	free(block->b_directory->tab_index);
+	free(block->b_directory);
+	free(block);
+	
+	disk->nb_block--;
+	
+}
+
+void free_block_data(Disk* disk, Block* block){
+	//Block* prev_block=search_prev_block(disk->blocks,block);
+	
+	//idem --Solenn
+	//prev_block->next_block=block->next_block;
+	
+	free(block->b_data);
+	free(block);
+	
+	disk->nb_block--;
+	
+}
+
+/*
+Block* search_prev_block(Block* first_block,Block* block){
+	
+	idem --Solenn
+	
+	if(first_bloc->next_block==block){
+		return first_block;
+	}
+	else{
+		return search_prev_block(first_block->next_block,block);
+	}
+	
+}*/
+	
