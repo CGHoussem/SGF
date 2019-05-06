@@ -12,13 +12,14 @@ void format_disk(Disk* disk){
 	Inode inode_null, inode;
 	char name[]="root";
 	
-	inode=mkdir(name,inode_null);
-	disk->inodes=&inode;
-	disk->nb_inode=1;
-	disk->blocks=disk->inodes->tab_block;
-	disk->nb_block=1;
-	
-	disk->blocks->b_directory->tab_index[1].inode=&inode;//change the inode of the directory ".."
+	inode = mkdir(name,inode_null);
+	disk->inodes = &inode;
+	disk->inodes->dir_blocks->prev_block = NULL;
+	disk->nb_inode = 1;
+	disk->data_blocks = NULL;
+	disk->dir_blocks = disk->inodes->dir_blocks;
+	disk->nb_dir_blocks = 1;
+	disk->dir_blocks->tab_index[1].inode = &inode; //change the inode of the directory ".."
 	printf("The disk has been successuflly formatted!\n");
 }
 
@@ -50,37 +51,20 @@ int load_disk(Disk* disk){
 	return 1;
 }
 
-Inode mkdir(char* name,Inode prev_inode){
-	Inode inode;
+Directory_block* allocation_tab_block_directory(int size){
+	Directory_block* tab_block = NULL;
 	
-	strcpy(inode.name,name);
-	init_permissions(inode.permissions);
-	inode.type=3; //directory
-	inode.date_creation=time(NULL);
-	inode.date_modification=time(NULL);
-	
-	inode.tab_block = (Block*) malloc(sizeof(Block));
-	inode.tab_block->b_directory=allocation_tab_block_directory(1);
+	tab_block=(Directory_block*) malloc(size*sizeof(Directory_block));
+	tab_block->next_block = NULL;
 
-	init_block_directory(inode.tab_block->b_directory,inode,prev_inode);
-	inode.next_inode=NULL;
-	
-	return inode;
-}
-
-Block_directory* allocation_tab_block_directory(int size){
-	Block_directory* tab_block=NULL;
-	
-	tab_block=(Block_directory*)malloc(size*sizeof(Block_directory));
-	
 	return tab_block;
 }
 
-void init_block_directory(Block_directory* block,Inode inode,Inode prev_inode){
+void init_block_directory(Directory_block* block,Inode inode,Inode prev_inode){
 	char name_dir[]=".";
 	char name_dir_father[]="..";
 	
-	block->tab_index=allocation_index(2);
+	block->tab_index = allocation_index(2);
 	
 	strcpy(block->tab_index[0].name,name_dir);
 	block->tab_index[0].inode=&inode;
@@ -114,11 +98,10 @@ void init_permissions(char permissions[9]){
 void free_inode(Disk* disk,Inode* inode, Inode* prev_inode){
 	prev_inode->next_inode=inode->next_inode;
 	
-	if(inode->type==3){ //directory
-		free_block_directory(disk,inode->tab_block);
-	}
-	else{
-		free_block_data(disk,inode->tab_block);
+	if(inode->type == 3){ //directory
+		free_block_directory(disk,inode->dir_blocks);
+	} else {
+		free_block_data(disk,inode->data_blocks);
 	}
 	
 	free(inode);
@@ -126,45 +109,46 @@ void free_inode(Disk* disk,Inode* inode, Inode* prev_inode){
 	disk->nb_inode--;
 }
 
-void free_block_directory(Disk* disk, Block* block){
-	//Block* prev_block=search_prev_block(disk->blocks,block);
+void free_block_directory(Disk* disk, Directory_block* block){
+	Directory_block* prev_block = search_prev_block(disk->dir_blocks, block, DIRECTORY_BLOCK);
+	if (prev_block != NULL)
+		prev_block->next_block=block->next_block;
 	
-	//Comment gérer le fait qu'on connaisse pas la nature du bloc précédent ? --Solenn
-	
-	//prev_block->next_block=block->next_block;
-	
-	free(block->b_directory->tab_index);
-	free(block->b_directory);
+	free(block->tab_index);
 	free(block);
 	
-	disk->nb_block--;
+	disk->nb_dir_blocks--;
 	
 }
 
-void free_block_data(Disk* disk, Block* block){
-	//Block* prev_block=search_prev_block(disk->blocks,block);
+void free_block_data(Disk* disk, Data_block* block){
+	Data_block* prev_block=search_prev_block(disk->data_blocks, block, DATA_BLOCK);
+	prev_block->next_block=block->next_block;
 	
-	//idem --Solenn
-	//prev_block->next_block=block->next_block;
-	
-	free(block->b_data);
 	free(block);
 	
-	disk->nb_block--;
-	
+	disk->nb_data_blocks--;	
 }
 
-/*
-Block* search_prev_block(Block* first_block,Block* block){
-	
-	idem --Solenn
-	
-	if(first_bloc->next_block==block){
-		return first_block;
+void* search_prev_block(void* first_block, void* block, Block_type type){
+	if (first_block == NULL){
+		return NULL;
 	}
-	else{
-		return search_prev_block(first_block->next_block,block);
+	if (type == DIRECTORY_BLOCK){
+		Directory_block* fb = (Directory_block*) first_block;
+		Directory_block* b = (Directory_block*) block;
+		if(fb->next_block==block){
+			return fb;
+		} else{
+			return search_prev_block(fb->next_block,b, DIRECTORY_BLOCK);
+		}
+	} else {
+		Data_block* fb = (Data_block*) first_block;
+		Data_block* b = (Data_block*) block;
+		if(fb->next_block==block){
+			return fb;
+		} else{
+			return search_prev_block(fb->next_block,b, DATA_BLOCK);
+		}
 	}
-	
-}*/
-	
+}

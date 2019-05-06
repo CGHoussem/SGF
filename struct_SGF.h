@@ -5,9 +5,9 @@
 #include <time.h>
 
 typedef struct Index Index;
-typedef struct Block_data Block_data;
-typedef struct Block_directory Block_directory;
-typedef union Block Block;
+typedef enum Block_type Block_type;
+typedef struct Directory_block Directory_block;
+typedef struct Data_block Data_block;
 typedef struct Inode Inode;
 typedef struct Disk Disk;
 
@@ -16,37 +16,45 @@ struct Index {
 	Inode* inode;
 };
 
-struct Block_data {
+enum Block_type {
+	DIRECTORY_BLOCK,
+	DATA_BLOCK
+};
+
+struct Directory_block {
+	Directory_block* prev_block;
+	Directory_block* next_block;
+	
+	Index* tab_index;
+};
+
+struct Data_block {
+	Data_block* prev_block;
+	Data_block* next_block;
+
 	char data[BUFFER_SIZE];
 	int size;
-	Block* next_block;
-};
-
-struct Block_directory {
-	Index* tab_index;
-	Block* next_block;
-};
-
-union Block {
-	Block_data* b_data;
-	Block_directory* b_directory;
 };
 
 struct Inode {
 	char name[MAX_FILE_NAME];
-	char permissions[9]; // rwxr--r-- {1,1,1,1,0,0,1,0,0}
+	char permissions[9]; // rwxr--r--
 	int type; // 1 = text, 2 = binary, 3 = directory
 	time_t date_creation;
 	time_t date_modification;
-	Block* tab_block;
+	Directory_block* dir_blocks;
+	Data_block* data_blocks;
 	Inode* next_inode;
 };
 
 struct Disk {
-	Inode* inodes;	//1st inode
-	int nb_inode;
-	Block* blocks; //1st block
-	int nb_block;
+	Inode* inodes;	// 1st inode
+	Directory_block* dir_blocks; // list of directory blocks
+	Data_block* data_blocks; // list of data blocks
+	
+	int nb_inode; // count of inodes
+	int nb_dir_blocks; // count of directory blocks
+	int nb_data_blocks; // count of data blocks
 };
 
 #endif

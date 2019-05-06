@@ -18,18 +18,20 @@ int main(int argc, char** argv){
 	
 	if (load_disk(&disk) == 0){
 		printf("Loading of the disk has failed!\n");
-		free(disk.blocks->b_directory->tab_index);
-		free(disk.blocks->b_directory);
+		free(disk.dir_blocks->tab_index);
+		free(disk.dir_blocks);
 		return EXIT_FAILURE;
 	} else {
 		printf("The disk has been loaded successfully!\n");
 	}
 
-	printf("%s \n",disk.blocks->b_directory->tab_index[0].name);
-	printf("%s \n",disk.blocks->b_directory->tab_index[1].name);
+	free_block_directory(&disk, disk.dir_blocks);
+
+	printf("%s \n",disk.dir_blocks->tab_index[0].name);
+	printf("%s \n",disk.dir_blocks->tab_index[1].name);
 	
-	free(disk.blocks->b_directory->tab_index);
-	free(disk.blocks->b_directory);
+	free(disk.dir_blocks->tab_index);
+	free(disk.dir_blocks);
 
     return EXIT_SUCCESS;
 }
