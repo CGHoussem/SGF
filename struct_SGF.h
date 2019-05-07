@@ -44,11 +44,13 @@ struct Inode {
 	time_t date_modification;
 	Directory_block* dir_blocks;
 	Data_block* data_blocks;
+	
+	Inode* prev_inode;
 	Inode* next_inode;
 };
 
 struct Disk {
-	Inode* inodes;	// 1st inode
+	Inode* inodes;	// list of inodes
 	Directory_block* dir_blocks; // list of directory blocks
 	Data_block* data_blocks; // list of data blocks
 	

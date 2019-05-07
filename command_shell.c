@@ -6,6 +6,7 @@
 #include "primitives.h"
 #include "command_shell.h"
 #include "save_load_SGF.h"
+#include "constants.h"
 
 /*
 

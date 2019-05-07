@@ -9,14 +9,16 @@
 #include "constants.h"
 
 void format_disk(Disk* disk){
-	Inode inode_null, inode;
+	Inode inode;
 	char name[]="root";
 	
-	inode = mkdir(name,inode_null);
+	inode = mkdir(name,NULL);
 	disk->inodes = &inode;
 	disk->inodes->dir_blocks->prev_block = NULL;
 	disk->nb_inode = 1;
+	//Initialiser un data block ??
 	disk->data_blocks = NULL;
+	disk->nb_data_blocks = 0;
 	disk->dir_blocks = disk->inodes->dir_blocks;
 	disk->nb_dir_blocks = 1;
 	disk->dir_blocks->tab_index[1].inode = &inode; //change the inode of the directory ".."
@@ -60,17 +62,17 @@ Directory_block* allocation_tab_block_directory(int size){
 	return tab_block;
 }
 
-void init_block_directory(Directory_block* block,Inode inode,Inode prev_inode){
+void init_block_directory(Directory_block* block,Inode* inode,Inode* prev_inode){
 	char name_dir[]=".";
 	char name_dir_father[]="..";
 	
 	block->tab_index = allocation_index(2);
 	
 	strcpy(block->tab_index[0].name,name_dir);
-	block->tab_index[0].inode=&inode;
+	block->tab_index[0].inode=inode;
 	
 	strcpy(block->tab_index[1].name,name_dir_father);
-	block->tab_index[1].inode=&prev_inode;
+	block->tab_index[1].inode=prev_inode;
 	
 	block->next_block=NULL;
 }
@@ -95,24 +97,30 @@ void init_permissions(char permissions[9]){
 	permissions[8]='-';
 }
 
-void free_inode(Disk* disk,Inode* inode, Inode* prev_inode){
-	prev_inode->next_inode=inode->next_inode;
+void free_inode(Disk* disk,Inode* inode){
+	printf("test1 \n");
+	inode->prev_inode->next_inode=inode->next_inode;
 	
-	if(inode->type == 3){ //directory
+	if(inode->type == DIRECTORY){ 
+		printf("test3 \n");
 		free_block_directory(disk,inode->dir_blocks);
+		printf("test4 \n");
 	} else {
 		free_block_data(disk,inode->data_blocks);
 	}
 	
 	free(inode);
+	printf("test5 \n");
 	
 	disk->nb_inode--;
+	
+	printf("test2 \n");
 }
 
 void free_block_directory(Disk* disk, Directory_block* block){
-	Directory_block* prev_block = search_prev_block(disk->dir_blocks, block, DIRECTORY_BLOCK);
-	if (prev_block != NULL)
-		prev_block->next_block=block->next_block;
+	//Directory_block* prev_block = search_prev_block(disk->dir_blocks, block, DIRECTORY_BLOCK);
+	if (block->prev_block != NULL)
+		block->prev_block->next_block=block->next_block;
 	
 	free(block->tab_index);
 	free(block);
@@ -122,15 +130,15 @@ void free_block_directory(Disk* disk, Directory_block* block){
 }
 
 void free_block_data(Disk* disk, Data_block* block){
-	Data_block* prev_block=search_prev_block(disk->data_blocks, block, DATA_BLOCK);
-	prev_block->next_block=block->next_block;
+	//Data_block* prev_block=search_prev_block(disk->data_blocks, block, DATA_BLOCK);
+	block->prev_block->next_block=block->next_block;
 	
 	free(block);
 	
 	disk->nb_data_blocks--;	
 }
 
-void* search_prev_block(void* first_block, void* block, Block_type type){
+/*void* search_prev_block(void* first_block, void* block, Block_type type){
 	if (first_block == NULL){
 		return NULL;
 	}
@@ -151,4 +159,4 @@ void* search_prev_block(void* first_block, void* block, Block_type type){
 			return search_prev_block(fb->next_block,b, DATA_BLOCK);
 		}
 	}
-}
+}*/
