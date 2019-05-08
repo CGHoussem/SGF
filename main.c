@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "struct_SGF.h"
 #include "primitives.h"
 #include "command_shell.h"
@@ -25,14 +26,21 @@ int main(int argc, char** argv){
 	} else {
 		printf("The disk has been loaded successfully!\n");
 	}
-
+	
 	printf("%s \n",disk.dir_blocks->tab_index[0].name);
 	printf("%s \n",disk.dir_blocks->tab_index[1].name);
+
+	char cmd[100] = "";
+	int index_courant = 0;
+    
+	while(strcmp(cmd, "exit")) {
+		printDir();
+		scanf("%s", cmd);
+		mycreate(&disk, index_courant, "test.txt"); // creation d'un txt
+		ls(&disk, index_courant); // effectue un ls peu importe la cmd
+	}
 	
 	free_disk(&disk);
-	
-	
-	
 
     return EXIT_SUCCESS;
 }
