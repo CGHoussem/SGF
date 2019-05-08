@@ -61,8 +61,16 @@ Directory_block* allocation_tab_block_directory(int size){
 }
 
 void init_block_directory(Directory_block* block,Inode* inode_directory,Inode* inode_parent_directory,Disk* disk){
-	char name_dir[]=".";
-	char name_parent_dir[]="..";
+	char* name_parent_dir = (char*) malloc(sizeof(char) * MAX_FILE_NAME);
+	char* name_dir = (char*) malloc(sizeof(char) * MAX_FILE_NAME);
+	
+	if (inode_parent_directory == NULL){
+		strcpy(name_parent_dir, "..");
+		strcpy(name_dir, ".");
+	} else {
+		strcpy(name_parent_dir, inode_parent_directory->name);
+		strcpy(name_dir, inode_directory->name);
+	}
 	
 	block->tab_index = NULL;
 	block->tab_index = allocation_index(2);

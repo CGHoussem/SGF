@@ -13,7 +13,7 @@ void mkdir(char* name,Disk* disk,Inode* current_inode){
 	
 	inode = (Inode*)malloc(sizeof(Inode));
 	
-	strcpy(inode->name,name);
+	strcpy(inode->name, name);
 	
 	init_permissions(inode->permissions);
 	inode->type=DIRECTORY; 
@@ -23,19 +23,21 @@ void mkdir(char* name,Disk* disk,Inode* current_inode){
 	inode->data_blocks = NULL;
 	inode->dir_blocks = NULL;
 	inode->dir_blocks = allocation_tab_block_directory(1);
+
+	inode->prev_inode = current_inode;
+	inode->next_inode = NULL;
 	
 	if(current_inode == NULL){ //root
-		init_block_directory(inode->dir_blocks,inode,inode,disk);
+		init_block_directory(inode->dir_blocks,inode,NULL,disk);
 	}
 	else{
 		init_block_directory(inode->dir_blocks,inode,current_inode,disk);
 	}
 	
-	printf("The block has been allocated \n");
-	
-	inode->next_inode=NULL;
+	//printf("The block has been allocated \n");
+
 	add_inode(inode,disk);
 	
-	printf("The repertory %s has been created successfully ! \n",name);
+	printf("The directory %s has been created successfully ! \n",name);
 	
 }

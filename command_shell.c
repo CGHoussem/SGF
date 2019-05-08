@@ -96,8 +96,10 @@ void rm(char* name, Inode prev_inode){
 	/*La fonction desalloc n'existe pas, il faut l'écrire (sinon c'est free la fonction) --Solenn
 	inode.tab_block = (Block*) desalloc(sizeof(Block)); */
 	
-	
 	inode.dir_blocks=allocation_tab_block_directory(1);
-    init_block_directory(inode.dir_blocks, inode, prev_inode);
+
+    // Il faut la variable disk pour la fonction init_block_directory --Houssem
+    //init_block_directory(inode.dir_blocks, inode, prev_inode);
+    
     inode.next_inode=NULL;
 }

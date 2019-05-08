@@ -5,3 +5,5 @@
 *.o
 program
 
+# Disk file
+*.dat

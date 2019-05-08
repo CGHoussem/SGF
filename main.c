@@ -10,6 +10,7 @@ int main(int argc, char** argv){
 	Disk disk;
 	
 	format_disk(&disk);
+	printf("Disk root name is: %s\n", disk.inodes->name);
 	
 	if (save_disk(disk) == 0) {
 		printf("Saving of the disk has failed!\n");
@@ -19,20 +20,21 @@ int main(int argc, char** argv){
 	
 	if (load_disk(&disk) == 0){
 		printf("Loading of the disk has failed!\n");
-		free(disk.dir_blocks->tab_index);
-		free(disk.dir_blocks);
+		free_disk(&disk);
 		return EXIT_FAILURE;
 	} else {
 		printf("The disk has been loaded successfully!\n");
 	}
 
-	printf("%s \n",disk.dir_blocks->tab_index[0].name);
-	printf("%s \n",disk.dir_blocks->tab_index[1].name);
-	
+	printf("%s \n",disk.inodes->dir_blocks->tab_index[0].name);
+	printf("%s \n",disk.inodes->dir_blocks->tab_index[1].name);
+
+	mkdir("myfiles", &disk, disk.inodes);
+
+	printf("%s \n",disk.inodes->dir_blocks->next_block->tab_index[0].name);
+	printf("%s \n",disk.inodes->dir_blocks->next_block->tab_index[1].name);
+
 	free_disk(&disk);
-	
-	
-	
 
     return EXIT_SUCCESS;
 }
