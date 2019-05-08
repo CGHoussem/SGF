@@ -9,19 +9,17 @@
 #include "constants.h"
 
 void format_disk(Disk* disk){
-	Inode inode;
-	char name[]="root";
 	
-	inode = mkdir(name,NULL);
-	disk->inodes = &inode;
-	disk->inodes->dir_blocks->prev_block = NULL;
-	disk->nb_inode = 1;
-	//Initialiser un data block ??
+	disk->inodes = NULL;
+	disk->dir_blocks = NULL;
 	disk->data_blocks = NULL;
+	
+	disk->nb_inode = 0;
+	disk->nb_dir_blocks = 0;
 	disk->nb_data_blocks = 0;
-	disk->dir_blocks = disk->inodes->dir_blocks;
-	disk->nb_dir_blocks = 1;
-	disk->dir_blocks->tab_index[1].inode = &inode; //change the inode of the directory ".."
+	
+	mkdir("root",disk,NULL);
+
 	printf("The disk has been successuflly formatted!\n");
 }
 
@@ -62,19 +60,21 @@ Directory_block* allocation_tab_block_directory(int size){
 	return tab_block;
 }
 
-void init_block_directory(Directory_block* block,Inode* inode,Inode* prev_inode){
+void init_block_directory(Directory_block* block,Inode* inode_directory,Inode* inode_parent_directory,Disk* disk){
 	char name_dir[]=".";
-	char name_dir_father[]="..";
+	char name_parent_dir[]="..";
 	
+	block->tab_index = NULL;
 	block->tab_index = allocation_index(2);
 	
 	strcpy(block->tab_index[0].name,name_dir);
-	block->tab_index[0].inode=inode;
+	block->tab_index[0].inode=inode_directory;
 	
-	strcpy(block->tab_index[1].name,name_dir_father);
-	block->tab_index[1].inode=prev_inode;
+	strcpy(block->tab_index[1].name,name_parent_dir);
+	block->tab_index[1].inode=inode_parent_directory;
 	
-	block->next_block=NULL;
+	block->next_block = NULL;
+	add_dir_block(block,disk);
 }
 
 Index* allocation_index(int size){
@@ -98,27 +98,28 @@ void init_permissions(char permissions[9]){
 }
 
 void free_inode(Disk* disk,Inode* inode){
-	printf("test1 \n");
-	inode->prev_inode->next_inode=inode->next_inode;
-	
+	if(inode->prev_inode != NULL)
+		inode->prev_inode->next_inode=inode->next_inode;
+
 	if(inode->type == DIRECTORY){ 
-		printf("test3 \n");
 		free_block_directory(disk,inode->dir_blocks);
-		printf("test4 \n");
+		inode->dir_blocks = NULL;
 	} else {
 		free_block_data(disk,inode->data_blocks);
+		inode->data_blocks = NULL;
 	}
 	
+	inode->prev_inode = NULL;
+	inode->next_inode = NULL;
+	
 	free(inode);
-	printf("test5 \n");
 	
 	disk->nb_inode--;
 	
-	printf("test2 \n");
 }
 
 void free_block_directory(Disk* disk, Directory_block* block){
-	//Directory_block* prev_block = search_prev_block(disk->dir_blocks, block, DIRECTORY_BLOCK);
+
 	if (block->prev_block != NULL)
 		block->prev_block->next_block=block->next_block;
 	
@@ -126,37 +127,108 @@ void free_block_directory(Disk* disk, Directory_block* block){
 	free(block);
 	
 	disk->nb_dir_blocks--;
-	
+
 }
 
 void free_block_data(Disk* disk, Data_block* block){
-	//Data_block* prev_block=search_prev_block(disk->data_blocks, block, DATA_BLOCK);
-	block->prev_block->next_block=block->next_block;
+	
+	if(block->prev_block != NULL)
+		block->prev_block->next_block=block->next_block;
 	
 	free(block);
 	
 	disk->nb_data_blocks--;	
 }
 
-/*void* search_prev_block(void* first_block, void* block, Block_type type){
-	if (first_block == NULL){
-		return NULL;
-	}
-	if (type == DIRECTORY_BLOCK){
-		Directory_block* fb = (Directory_block*) first_block;
-		Directory_block* b = (Directory_block*) block;
-		if(fb->next_block==block){
-			return fb;
-		} else{
-			return search_prev_block(fb->next_block,b, DIRECTORY_BLOCK);
+void free_disk(Disk* disk){
+	if(disk->inodes != NULL){
+		Inode* current_inode = disk->inodes;
+		
+		while(current_inode->next_inode != NULL){
+			current_inode = current_inode->next_inode;
+			free_inode(disk,current_inode->prev_inode);
 		}
-	} else {
-		Data_block* fb = (Data_block*) first_block;
-		Data_block* b = (Data_block*) block;
-		if(fb->next_block==block){
-			return fb;
-		} else{
-			return search_prev_block(fb->next_block,b, DATA_BLOCK);
-		}
+		free_inode(disk,current_inode);
 	}
-}*/
+}
+
+Inode* get_last_inode(Disk disk){
+	Inode* current_inode = disk.inodes;
+	
+	while(current_inode->next_inode != NULL){
+		current_inode = current_inode->next_inode;
+	}
+	
+	return current_inode;
+}
+
+void add_inode(Inode* inode, Disk* disk){
+	if(disk->inodes != NULL){
+		Inode* last_inode = get_last_inode(*disk);
+		
+		last_inode->next_inode = inode;
+		inode->prev_inode = last_inode;
+		
+		disk->nb_inode++;
+	}
+	else{
+		disk->inodes = inode;
+		inode->prev_inode = NULL;
+		disk->nb_inode = 1;
+	}
+	
+}
+
+Directory_block* get_last_dir_block(Disk disk){
+	Directory_block* current_dir_block = disk.dir_blocks;
+	
+	while(current_dir_block->next_block != NULL){
+		current_dir_block = current_dir_block->next_block;
+	}
+	
+	return current_dir_block;
+}
+
+void add_dir_block(Directory_block* dir_block, Disk* disk){
+	if(disk->dir_blocks != NULL){
+		Directory_block* last_dir_block = get_last_dir_block(*disk);
+		
+		last_dir_block->next_block = dir_block;
+		dir_block->prev_block = last_dir_block;
+		
+		disk->nb_dir_blocks++;
+	}
+	else{
+		disk->dir_blocks = dir_block;
+		dir_block->prev_block = NULL;
+		disk->nb_dir_blocks = 1;
+	}
+	
+}
+	
+Data_block* get_last_data_block(Disk disk){
+	Data_block* current_data_block = disk.data_blocks;
+	
+	while(current_data_block->next_block != NULL){
+		current_data_block = current_data_block->next_block;
+	}
+	
+	return current_data_block;
+}
+
+void add_data_block(Data_block* data_block, Disk* disk){
+	if(disk->data_blocks != NULL){
+		Data_block* last_data_block = get_last_data_block(*disk);
+		
+		last_data_block->next_block = data_block;
+		data_block->prev_block = last_data_block;
+		
+		disk->nb_data_blocks++;
+	}
+	else{
+		disk->data_blocks = data_block;
+		data_block->prev_block = NULL;
+		disk->nb_data_blocks = 1;
+	}
+	
+}

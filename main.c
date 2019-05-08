@@ -8,7 +8,6 @@
 
 int main(int argc, char** argv){
 	Disk disk;
-	Inode inode_test;
 	
 	format_disk(&disk);
 	
@@ -27,17 +26,13 @@ int main(int argc, char** argv){
 		printf("The disk has been loaded successfully!\n");
 	}
 
-	//free_block_directory(&disk, disk.dir_blocks);
-
 	printf("%s \n",disk.dir_blocks->tab_index[0].name);
 	printf("%s \n",disk.dir_blocks->tab_index[1].name);
 	
-	inode_test=mkdir("test",disk.inodes);
-	inode_test.dir_blocks->prev_block=disk.dir_blocks;
-	free_inode(&disk,&inode_test);
+	free_disk(&disk);
 	
-	/*free(disk.dir_blocks->tab_index);
-	free(disk.dir_blocks);*/
+	
+	
 
     return EXIT_SUCCESS;
 }
