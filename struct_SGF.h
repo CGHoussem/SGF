@@ -26,6 +26,7 @@ struct Directory_block {
 	Directory_block* next_block;
 	
 	Index* tab_index;
+	int nb_index;
 };
 
 struct Data_block {
