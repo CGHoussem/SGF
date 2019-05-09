@@ -31,8 +31,9 @@ int main(int argc, char** argv){
 
 	mkdir("myfiles", &disk, disk.inodes);
 
-	printf("%s \n",disk.inodes->dir_blocks->next_block->tab_index[0].name);
-	printf("%s \n",disk.inodes->dir_blocks->next_block->tab_index[1].name);
+	printf("%s \n",disk.inodes->dir_blocks->tab_index[0].name);
+	printf("%s \n",disk.inodes->dir_blocks->tab_index[1].name);
+	printf("%s \n",disk.inodes->dir_blocks->tab_index[2].name);
 
 	free_disk(&disk);
 

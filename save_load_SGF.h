@@ -14,6 +14,7 @@ Directory_block* get_last_dir_block(Disk disk); //return the last directory bloc
 void add_dir_block(Directory_block* dir_block, Disk* disk); //add a directory block at the end of the list
 Data_block* get_last_data_block(Disk disk); //return the last data block of the list
 void add_data_block(Data_block* dir_block, Disk* disk); //add a data block at the end of the list
+void update_index(Inode* current_inode, Inode* inode_to_add); //update the index of current_inode by adding inode_to_add
 
 // Allocations
 Index* allocation_index(int size); //dynamic allocation

@@ -20,7 +20,7 @@ void format_disk(Disk* disk){
 	
 	mkdir("root",disk,NULL);
 
-	printf("The disk has been successuflly formatted!\n");
+	printf("The disk has been successfully formatted!\n");
 }
 
 int save_disk(Disk disk){
@@ -61,19 +61,12 @@ Directory_block* allocation_tab_block_directory(int size){
 }
 
 void init_block_directory(Directory_block* block,Inode* inode_directory,Inode* inode_parent_directory,Disk* disk){
-	char* name_parent_dir = (char*) malloc(sizeof(char) * MAX_FILE_NAME);
-	char* name_dir = (char*) malloc(sizeof(char) * MAX_FILE_NAME);
-	
-	if (inode_parent_directory == NULL){
-		strcpy(name_parent_dir, "..");
-		strcpy(name_dir, ".");
-	} else {
-		strcpy(name_parent_dir, inode_parent_directory->name);
-		strcpy(name_dir, inode_directory->name);
-	}
+	char name_parent_dir[] = "..";
+	char name_dir[] = ".";
 	
 	block->tab_index = NULL;
 	block->tab_index = allocation_index(2);
+	block->nb_index = 2;
 	
 	strcpy(block->tab_index[0].name,name_dir);
 	block->tab_index[0].inode=inode_directory;
@@ -83,6 +76,7 @@ void init_block_directory(Directory_block* block,Inode* inode_directory,Inode* i
 	
 	block->next_block = NULL;
 	add_dir_block(block,disk);
+
 }
 
 Index* allocation_index(int size){
@@ -240,3 +234,25 @@ void add_data_block(Data_block* data_block, Disk* disk){
 	}
 	
 }
+
+void update_index(Inode* current_inode, Inode* inode_to_add){
+	Index* new_index = NULL;
+	int i;
+	
+	new_index = allocation_index(current_inode->dir_blocks->nb_index+1);
+	
+	for(i=0;i<current_inode->dir_blocks->nb_index;i++){
+		new_index[i] = current_inode->dir_blocks->tab_index[i]; //copy the old index in the new one
+	}
+	
+	//add the directory at the end of the index
+	strcpy(new_index[current_inode->dir_blocks->nb_index].name,inode_to_add->name);
+	new_index[current_inode->dir_blocks->nb_index].inode = inode_to_add;
+	
+	free(current_inode->dir_blocks->tab_index);
+	current_inode->dir_blocks->tab_index = new_index;
+	
+	current_inode->dir_blocks->nb_index++;
+}
+
+

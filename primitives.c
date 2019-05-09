@@ -24,19 +24,19 @@ void mkdir(char* name,Disk* disk,Inode* current_inode){
 	inode->dir_blocks = NULL;
 	inode->dir_blocks = allocation_tab_block_directory(1);
 
-	inode->prev_inode = current_inode;
 	inode->next_inode = NULL;
 	
 	if(current_inode == NULL){ //root
-		init_block_directory(inode->dir_blocks,inode,NULL,disk);
+		init_block_directory(inode->dir_blocks,inode,inode,disk);
 	}
 	else{
 		init_block_directory(inode->dir_blocks,inode,current_inode,disk);
+		update_index(current_inode,inode);
 	}
 	
-	//printf("The block has been allocated \n");
 
 	add_inode(inode,disk);
+
 	
 	printf("The directory %s has been created successfully ! \n",name);
 	
