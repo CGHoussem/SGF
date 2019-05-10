@@ -29,8 +29,8 @@ int main(int argc, char** argv){
 
 	char cmd[100] = "";
 	    
-	mkdir("myfiles", &disk, disk.inodes);
-	mycreate("myfile.txt", &disk, disk.inodes);
+	mkdir("myfolder", &disk, disk.inodes);
+	mycreate("myfile", &disk, disk.inodes);
 	
 	printf("%s -> typefichier = %d\n",disk.inodes->dir_blocks->tab_index[0].name, disk.inodes->dir_blocks->tab_index[0].inode->type);
 	printf("%s -> typefichier = %d\n",disk.inodes->dir_blocks->tab_index[1].name, disk.inodes->dir_blocks->tab_index[1].inode->type);

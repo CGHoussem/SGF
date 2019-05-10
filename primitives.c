@@ -70,7 +70,7 @@ void mycreate(char* name,Disk* disk,Inode* current_inode){
 	inode->next_inode = NULL;
 	
 	init_block_data(inode->data_blocks,inode,current_inode,disk,name);
-	//update_tab_index(current_inode,inode);
+	update_tab_index(current_inode,inode);
 		
 	add_inode(inode,disk);
 	

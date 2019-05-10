@@ -92,13 +92,11 @@ void init_block_data(Data_block* block,Inode* inode_data,Inode* inode_parent_dir
 
 	strcpy(block->data, "");
 	block->size = 0;
-
+	
 	strcpy(inode_parent_directory->dir_blocks->tab_index[inode_parent_directory->dir_blocks->nb_index].name,name);
-	
+	//printf("%s\n", inode_parent_directory->dir_blocks->tab_index[inode_parent_directory->dir_blocks->nb_index].name);
+
 	inode_parent_directory->dir_blocks->tab_index[inode_parent_directory->dir_blocks->nb_index].inode = inode_data;
-	
-	//inode_parent_directory->dir_blocks->nb_index++;
-	// --Hakim : je crois que la ligne au dessus est déjà faite par update_tab_index, je sais pas trop
 	
 	block->next_block = NULL;
 	add_data_block(block,disk);
