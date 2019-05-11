@@ -27,23 +27,10 @@ int main(int argc, char** argv){
 		printf("The disk has been loaded successfully!\n");
 	}
 
-	char cmd[100] = "";
-	    
+	   
 	mkdir("myfolder", &disk, disk.inodes);
-	mycreate("myfile", &disk, disk.inodes);
-	
-	printf("%s -> typefichier = %d\n",disk.inodes->dir_blocks->tab_index[0].name, disk.inodes->dir_blocks->tab_index[0].inode->type);
-	printf("%s -> typefichier = %d\n",disk.inodes->dir_blocks->tab_index[1].name, disk.inodes->dir_blocks->tab_index[1].inode->type);
-	printf("%s -> typefichier = %d\n",disk.inodes->dir_blocks->tab_index[2].name, disk.inodes->dir_blocks->tab_index[2].inode->type);
-	printf("%s -> typefichier = %d\n",disk.inodes->dir_blocks->tab_index[3].name, disk.inodes->dir_blocks->tab_index[3].inode->type);
-
-	/*
-	while(strcmp(cmd, "exit")) { //mainloop
-		printDir();
-		scanf("%s", cmd);
-		mycreate("myfile.txt", &disk); // creation d'un fichier
-		ls(&disk, disk.inodes); // effectue un ls peu importe la cmd
-	}*/
+	mycreate("lol.txt", &disk, disk.inodes);
+	ls(disk.inodes);
 	
 	free_disk(&disk);
 

@@ -73,19 +73,19 @@ void mycreate(char* name,Disk* disk,Inode* current_inode){
 	update_tab_index(current_inode,inode);
 		
 	add_inode(inode,disk);
-	
+
 	printf("The file %s has been created successfully ! \n",name);
 	
 }
 
-void ls(Disk* disk, int index) {
-	Index rep_courant = disk->dir_blocks->tab_index[index];
-	Inode* inode = rep_courant.inode;
+void ls(Inode* current_inode) {
+	int number = current_inode->dir_blocks->nb_index;
 	
-	while(inode != NULL && inode->next_inode != NULL) {
-		printf("%s\n", inode->name);
-		inode = inode->next_inode;
+	printf("\nCommande ls appelée, résultat :\n");
+	for(int i=0;i<number;i++) {
+		printf("%s -> typefichier = %d\n",current_inode->dir_blocks->tab_index[i].name, current_inode->dir_blocks->tab_index[i].inode->type);
 	}
+
 }
 
 void cp(Inode source, Inode cible){
