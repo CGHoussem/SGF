@@ -1,11 +1,11 @@
 CC = gcc
 CFLAGS = -Wall -g
-OBJS = save_load.o primitives.o command_shell.o main.o
+OBJS = save_load.o primitives.o command_shell.o shell_utility.o main.o
 
 all: program
 
-program: main.o save_load.o primitives.o command_shell.o
-	$(CC) $(CFLAGS) -o program main.o save_load.o primitives.o command_shell.o
+program: $(OBJS)
+	$(CC) $(CFLAGS) -o program $(OBJS)
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c -o main.o main.c
@@ -18,6 +18,9 @@ primitives.o: primitives.c primitives.h
 
 command_shell.o: command_shell.c command_shell.h
 	$(CC) $(CFLAGS) -c -o command_shell.o command_shell.c
+
+sell_utility.o: shell_utility.c shell_utility.h
+	$(CC) $(CFLAGS) -c -o shell_utility.o shell_utility.c
 
 clean:
 	rm -f $(OBJS) program

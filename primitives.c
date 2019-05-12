@@ -93,7 +93,6 @@ void cp(Inode source, Inode cible){
     init_permissions(cible.permissions);
     cible.type=source.type;
 
-
 	/* pareil qu'au dessus  --Solenn
 
     cible.tab_block = (Block*) malloc(sizeof(Block));
