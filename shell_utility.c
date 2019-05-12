@@ -38,9 +38,7 @@ int executeLine(Disk disk, char* input){
     } else if (strcmp(input, "ls") == 0){
         ls(disk.inodes);
         return 1;
-    } else if (strcmp(input, "cp") == 0){
-        printf("IN DEV..\n");
-        return 1;
+    
     } else if (strcmp(input, "cp") == 0){
         mycreate(parsedInput[1], &disk, disk.inodes);
         return 1;
