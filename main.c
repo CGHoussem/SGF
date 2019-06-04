@@ -30,7 +30,7 @@ int main(int argc, char** argv){
 		
 	// Line-Command Interpreter
 	while (running){
-        printf("$FSMshell:~%s>", name);
+        printf("$FMSshell:~%s>", name);
         char* input = readline();
         running = executeLine(&disk, input, current_inode);
     }

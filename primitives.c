@@ -108,33 +108,10 @@ void cp(Inode** inodes,int number,Disk* disk){
 	Inode* source = NULL;
 	Inode* dest = NULL;
 	
-	printf("%p %p \n",inodes[0],inodes[1]);
-    
-    if(number < 2) {
-		printf("Missing file input \n");
-		return;
-	} 
-	
-	for(i=0;i<number-2;i++) {
-		if(inodes[i] == NULL) {
-			printf("Error: argument %d is not an existing file",(i+1));
-			return;
-		}
-		else if(inodes[i]->type == DIRECTORY) {
-			printf("Error: argument %d is a directory \n",(i+1));
-			return;
-		}
-	}
-	
-	if(number != 2 && (inodes[number-1])->type != DIRECTORY) {
-			printf("Error: More than a file to copy into a file");
-			return;
-	} 
-	
 	for(i=0;i<number-2;i++) {
 		source = inodes[i];
 		
-		if((inodes[number-1])->type == DIRECTORY){ 
+		if((inodes[number-1])->type == DIRECTORY){ //search destination
 			dest = search_file_in_directory(source->name,(inodes[number-1])->dir_blocks);
 			if(dest == NULL) { //file doesn't exist
 				mycreate(source->name,disk,inodes[number-1]);
@@ -143,8 +120,8 @@ void cp(Inode** inodes,int number,Disk* disk){
 		} else {
 			dest = inodes[number-1];
 		}
-	
-		strcpy(dest->name,source->name);
+
+		//copy the inode's informations
 		for(j=0;j<9;j++){
 			dest->permissions[i] = source->permissions[i];
 		}
