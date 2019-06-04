@@ -32,7 +32,7 @@ int main(int argc, char** argv){
 	while (running){
         printf("$FSMshell:~%s>", name);
         char* input = readline();
-        running = executeLine(disk, input, current_inode);
+        running = executeLine(&disk, input, current_inode);
     }
 
 	/*if (save_disk(disk) == 0) {

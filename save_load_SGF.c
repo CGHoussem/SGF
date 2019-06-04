@@ -278,7 +278,8 @@ Inode* search_file_in_directory(char* file_name,Directory_block* directory) {
 	
 	if(directory != NULL) {
 		for(i=0;i<directory->nb_index;i++) {
-			if(strcmp(directory->tab_index[i].name,file_name)) {
+			if(strcmp(directory->tab_index[i].name,file_name) == 0) {
+				printf("inode trouve %p \n",directory->tab_index[i].inode);
 				return directory->tab_index[i].inode;
 			}
 		}

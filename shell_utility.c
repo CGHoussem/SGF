@@ -33,33 +33,49 @@ char** parse(char* input){
     return args;
 }
 
-int executeLine(Disk disk, char* input,Inode* current_inode){
-	int nb_arg = 0;
+int executeLine(Disk* disk, char* input,Inode* current_inode){
+	int nb_arg,i,cpt;
 	Inode** inodes_input;
     char** parsedInput = parse(input);
     if (strcmp(input, "mkdir") == 0){
 		if(parsedInput[1] != NULL){
-			mkdir(parsedInput[1], &disk, disk.inodes);
+			mkdir(parsedInput[1], disk, disk->inodes);
 		} else {
 			printf("No directory name input \n");
 		}
         return 1;
     } else if (strcmp(input, "ls") == 0){
-        ls(disk.inodes);
+        ls(disk->inodes);
         return 1;
     } else if (strcmp(input, "touch") == 0){
 		if(parsedInput[1] != NULL){
-			mycreate(parsedInput[1], &disk, disk.inodes);
+			mycreate(parsedInput[1], disk, disk->inodes);
 		} else {
 			printf("No file name input \n");
 		}
         return 1;
     } else if (strcmp(input, "cp") == 0){
-        inodes_input = path_to_inode(parsedInput,&nb_arg,current_inode,&disk);
-        if(inodes_input != NULL){
-			cp(inodes_input,nb_arg,&disk);
-			free(inodes_input);
+		nb_arg = count_path(parsedInput);
+		if(nb_arg == 0) {
+			printf("Error : no file name input \n");
+			return 1;
 		}
+		inodes_input = (Inode**) malloc(nb_arg*sizeof(Inode*));
+		i = 1;
+		cpt = 0;
+		while(parsedInput[i] != NULL) {
+			if(parsedInput[i][0] != '-') {
+				if(cpt == nb_arg-1) {
+					inodes_input[cpt] = path_to_last_directory(parsedInput[i],current_inode,disk);
+				} else {
+					inodes_input[cpt] = path_to_inode(parsedInput[i],current_inode,disk);
+				}
+				cpt++;
+			}
+			i++;
+		}
+		cp(inodes_input,nb_arg,disk);
+		free(inodes_input);
         return 1;
     } else if (strcmp(input, "mv") == 0){
         printf("IN DEV..\n");
@@ -78,47 +94,79 @@ int executeLine(Disk disk, char* input,Inode* current_inode){
     }
 }
 
-Inode** path_to_inode(char** parsedInput,int* nb_arg,Inode* current_inode,Disk* disk){	
-	int i = 1;
-	int cpt = 0;
-	*nb_arg = 0;
-	Inode** inodes;
+Inode* path_to_inode(char* parsedInput,Inode* current_inode,Disk* disk){	
 	char* file_name;
 	Inode* inode = current_inode;
 	
-	while(parsedInput[i] != NULL) {
-		if(parsedInput[i][0] != '-'){
-			(*nb_arg)++;
-		}
-		i++;
-	}
+	printf("path to inode \n");
 
-	inodes = (Inode**) malloc(*nb_arg * sizeof(Inode*));
+	file_name = strtok(parsedInput,"/");
+	printf("1 %s \n",file_name);
+	if(strcmp(file_name,"root") == 0){
+		inode = disk->inodes;
+	} else {
+		inode = search_file_in_directory(file_name,inode->dir_blocks);
+	}
+	file_name = strtok(NULL,"/");
+	printf("2 %s \n",file_name);
+	while(file_name != NULL) {
+		inode = search_file_in_directory(file_name,inode->dir_blocks);
+		file_name = strtok(NULL,"/");
+		printf("3 %s \n",file_name);
+		if(inode == NULL) { //file doesn't exist
+			printf("inode: %p \n",inode);
+			return NULL;
+		}
+	}
+	printf("inode: %p \n",inode);
+	return inode;
+}
+
+Inode* path_to_last_directory(char* parsedInput,Inode* current_inode,Disk* disk){	
+	char* file_name;
+	Inode* inode = current_inode;
+	Inode* next_inode = NULL;
+
+	printf("path to parent inode \n");
+
+	file_name = strtok(parsedInput,"/");
+	printf("1 %s \n",file_name);
+	if(strcmp(file_name,"root") == 0){
+		inode = disk->inodes;
+		next_inode = inode;
+	} else {
+		next_inode = search_file_in_directory(file_name,inode->dir_blocks);
+	}
+	file_name = strtok(NULL,"/");
+	printf("2 %s \n",file_name);
+	while(file_name != NULL) {
+		inode = next_inode;
+		next_inode = search_file_in_directory(file_name,inode->dir_blocks);
+		file_name = strtok(NULL,"/");
+		printf("3 %s \n",file_name);
+		if(next_inode == NULL && file_name != NULL) { //file doesn't exist
+			printf("Error : path doesn't exist \n");
+			return NULL;
+		}
+	}
+	if(next_inode == NULL) {
+		printf("inode: %p \n",inode);
+		return inode;
+	} else {
+		printf("inode: %p \n",next_inode);
+		return next_inode;
+	}
+}
+
+int count_path(char** parsedInput) {
+	int i = 1;
+	int nb_arg = 0;
 	
-	i = 1;
 	while(parsedInput[i] != NULL) {
-		if(parsedInput[i][0] != '-'){
-			file_name = strtok(parsedInput[i],"/");
-			printf("%s \n",file_name);
-			if(strcmp(file_name,"root") == 0){
-				inode = disk->inodes;
-			}
-			file_name = strtok(NULL,"/");
-			printf("%s \n",file_name);
-			while(file_name != NULL) {
-				inode = search_file_in_directory(file_name,inode->dir_blocks);
-				if(inode == NULL) {
-					printf("Error: argument %d inexisting path",i);
-					free(inodes);
-					return NULL;
-				}
-				file_name = strtok(NULL,"/");
-				printf("%s \n",file_name);
-			}
-			inodes[cpt] = inode;
-			cpt++;
+		if(parsedInput[i][0] != '-') {
+			nb_arg++;
 		}
 		i++;
 	}
-	return inodes;
+	return nb_arg;
 }

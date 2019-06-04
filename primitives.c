@@ -116,19 +116,21 @@ void cp(Inode** inodes,int number,Disk* disk){
 	} 
 	
 	for(i=0;i<number-2;i++) {
-		if(inodes[i]->type == DIRECTORY) {
+		if(inodes[i] == NULL) {
+			printf("Error: argument %d is not an existing file",(i+1));
+			return;
+		}
+		else if(inodes[i]->type == DIRECTORY) {
 			printf("Error: argument %d is a directory \n",(i+1));
 			return;
 		}
 	}
 	
-	
-	
-	if((inodes[number-1])->type != DIRECTORY && number != 2) {
+	if(number != 2 && (inodes[number-1])->type != DIRECTORY) {
 			printf("Error: More than a file to copy into a file");
 			return;
 	} 
-
+	
 	for(i=0;i<number-2;i++) {
 		source = inodes[i];
 		
