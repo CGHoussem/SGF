@@ -23,6 +23,7 @@ df : pour avoir les infos du disque (nombre de blocs et d’inodes disponibles, 
 */
 
 void mkdir(char* name,Disk* disk,Inode* current_inode){
+	//TODO Vérifier que le dossier n'existe pas déjà
 	Inode* inode = NULL;
 	
 	inode = (Inode*)malloc(sizeof(Inode));
@@ -54,6 +55,7 @@ void mkdir(char* name,Disk* disk,Inode* current_inode){
 }
 
 void mycreate(char* name,Disk* disk,Inode* current_inode){
+	//TODO Vérifier que le fichier n'existe pas déjà
     Inode* inode = NULL;
 	inode = (Inode*)malloc(sizeof(Inode));
 	
@@ -69,7 +71,7 @@ void mycreate(char* name,Disk* disk,Inode* current_inode){
 
 	inode->next_inode = NULL;
 	
-	init_block_data(inode->data_blocks,inode,current_inode,disk,name);
+	init_block_data(inode->data_blocks,disk);
 	update_tab_index(current_inode,inode);
 		
 	add_inode(inode,disk);
@@ -101,21 +103,62 @@ void ls(Inode* current_inode) {
 
 }
 
-void cp(Inode source, Inode cible){
-    strcpy(cible.name,source.name);
-    init_permissions(cible.permissions);
-    cible.type=source.type;
+void cp(Inode** inodes,int number,Disk* disk){
+	int i,j;
+	Inode* source = NULL;
+	Inode* dest = NULL;
+	
+	printf("%p %p \n",inodes[0],inodes[1]);
+    
+    if(number < 2) {
+		printf("Missing file input \n");
+		return;
+	} 
+	
+	for(i=0;i<number-2;i++) {
+		if(inodes[i]->type == DIRECTORY) {
+			printf("Error: argument %d is a directory \n",(i+1));
+			return;
+		}
+	}
+	
+	
+	
+	if((inodes[number-1])->type != DIRECTORY && number != 2) {
+			printf("Error: More than a file to copy into a file");
+			return;
+	} 
 
-	/* pareil qu'au dessus  --Solenn
-
-    cible.tab_block = (Block*) malloc(sizeof(Block));
-    cible.tab_block->b_directory=allocation_tab_block_directory;
-
-
-	init_block_directory(cible.tab_block->b_directory,cible,source);
-	cible.next_inode=NULL; */
-
-
+	for(i=0;i<number-2;i++) {
+		source = inodes[i];
+		
+		if((inodes[number-1])->type == DIRECTORY){ 
+			dest = search_file_in_directory(source->name,(inodes[number-1])->dir_blocks);
+			if(dest == NULL) { //file doesn't exist
+				mycreate(source->name,disk,inodes[number-1]);
+				dest = get_last_inode(*disk);
+			}
+		} else {
+			dest = inodes[number-1];
+		}
+	
+		strcpy(dest->name,source->name);
+		for(j=0;j<9;j++){
+			dest->permissions[i] = source->permissions[i];
+		}
+		dest-> date_modification = time(NULL);
+		
+		if(dest->data_blocks->size != 0) {
+			for(j=0;j<dest->data_blocks->size;j++){ //delete the old data
+				dest->data_blocks->data[i] = 0;
+			}
+		}
+		
+		dest->data_blocks->size = source->data_blocks->size;
+		for(j=0;j<dest->data_blocks->size;j++){ //write the new data
+			dest->data_blocks->data[i] = source->data_blocks->data[i];
+		}
+	}		
 }
 /*
 void mv(Inode source, Inode cible){

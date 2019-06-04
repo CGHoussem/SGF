@@ -15,6 +15,7 @@ void add_dir_block(Directory_block* dir_block, Disk* disk); //add a directory bl
 Data_block* get_last_data_block(Disk disk); //return the last data block of the list
 void add_data_block(Data_block* dir_block, Disk* disk); //add a data block at the end of the list
 void update_tab_index(Inode* current_inode, Inode* inode_to_add); //update the index of current_inode by adding inode_to_add
+Inode* search_file_in_directory(char* file_name,Directory_block* directory); //return the inode of the given file name if exists, else return NULL
 
 // Allocations
 Index* allocation_index(int size); //dynamic allocation
@@ -30,7 +31,7 @@ void free_disk(Disk* disk); //delete the disk
 
 // Initializations
 void init_block_directory(Directory_block* block,Inode* inode_directory,Inode* inode_parent_directory,Disk* disk); //initialization of a directory block
-void init_block_data(Data_block* block,Inode* inode_data,Inode* inode_parent_directory,Disk* disk, char name[MAX_FILE_NAME]); //initialization of a data block
+void init_block_data(Data_block* block,Disk* disk); //initialization of a data block
 void init_permissions(char permissions[9]); //initialization of permissions
 
 #endif

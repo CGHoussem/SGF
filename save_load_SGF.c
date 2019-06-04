@@ -88,15 +88,9 @@ void init_block_directory(Directory_block* block,Inode* inode_directory,Inode* i
 
 }
 
-void init_block_data(Data_block* block,Inode* inode_data,Inode* inode_parent_directory,Disk* disk, char name[MAX_FILE_NAME]){
+void init_block_data(Data_block* block,Disk* disk){
 
-	strcpy(block->data, "");
 	block->size = 0;
-	
-	strcpy(inode_parent_directory->dir_blocks->tab_index[inode_parent_directory->dir_blocks->nb_index].name,name);
-	//printf("%s\n", inode_parent_directory->dir_blocks->tab_index[inode_parent_directory->dir_blocks->nb_index].name);
-
-	inode_parent_directory->dir_blocks->tab_index[inode_parent_directory->dir_blocks->nb_index].inode = inode_data;
 	
 	block->next_block = NULL;
 	add_data_block(block,disk);
@@ -277,6 +271,19 @@ void update_tab_index(Inode* current_inode, Inode* inode_to_add){
 	current_inode->dir_blocks->tab_index = new_index;
 	
 	current_inode->dir_blocks->nb_index++;
+}
+
+Inode* search_file_in_directory(char* file_name,Directory_block* directory) {
+	int i;
+	
+	if(directory != NULL) {
+		for(i=0;i<directory->nb_index;i++) {
+			if(strcmp(directory->tab_index[i].name,file_name)) {
+				return directory->tab_index[i].inode;
+			}
+		}
+	}
+	return NULL;
 }
 
 

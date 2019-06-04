@@ -12,11 +12,13 @@ int main(int argc, char** argv){
 	int running = 1;
     char* name = NULL;
 	Disk disk;
+	Inode* current_inode;
 	
 	
 	format_disk(&disk);
 	printf("Disk root name is: %s\n", disk.inodes->name);
     name=disk.inodes->name;
+    current_inode = disk.inodes;
 		
 	/*if (load_disk(&disk) == 0){
 		printf("Loading of the disk has failed!\n");
@@ -30,7 +32,7 @@ int main(int argc, char** argv){
 	while (running){
         printf("$FSMshell:~%s>", name);
         char* input = readline();
-        running = executeLine(disk, input);
+        running = executeLine(disk, input, current_inode);
     }
 
 	/*if (save_disk(disk) == 0) {
