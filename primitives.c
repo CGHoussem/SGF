@@ -80,10 +80,23 @@ void mycreate(char* name,Disk* disk,Inode* current_inode){
 
 void ls(Inode* current_inode) {
 	int number = current_inode->dir_blocks->nb_index;
+	char file_type[MAX_FILE_NAME];
 	
-	printf("\nCommande ls appelée, résultat :\n");
 	for(int i=0;i<number;i++) {
-		printf("%s -> typefichier = %d\n",current_inode->dir_blocks->tab_index[i].name, current_inode->dir_blocks->tab_index[i].inode->type);
+		switch(current_inode->dir_blocks->tab_index[i].inode->type) { //file type
+			case TEXT:
+			strcpy(file_type,"Text");
+			break;
+			case BINARY:
+			strcpy(file_type,"Binary");
+			break;
+			case DIRECTORY:
+			strcpy(file_type,"Directory");
+			break;
+			default:
+			break;
+		}
+		printf("%s -> file type : %s\n",current_inode->dir_blocks->tab_index[i].name, file_type);
 	}
 
 }

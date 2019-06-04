@@ -13,17 +13,18 @@ int main(int argc, char** argv){
     char* name = NULL;
 	Disk disk;
 	
+	
 	format_disk(&disk);
 	printf("Disk root name is: %s\n", disk.inodes->name);
     name=disk.inodes->name;
 		
-	if (load_disk(&disk) == 0){
+	/*if (load_disk(&disk) == 0){
 		printf("Loading of the disk has failed!\n");
 		free_disk(&disk);
-		return EXIT_FAILURE;
+		exit(EXIT_FAILURE);
 	} else {
 		printf("The disk has been loaded successfully!\n");
-	}
+	}*/
 		
 	// Line-Command Interpreter
 	while (running){
@@ -32,11 +33,11 @@ int main(int argc, char** argv){
         running = executeLine(disk, input);
     }
 
-	if (save_disk(disk) == 0) {
+	/*if (save_disk(disk) == 0) {
 		printf("Saving of the disk has failed!\n");
 	} else {
 		printf("The disk has been saved successfully!\n");
-	}
+	}*/
 	
 	free_disk(&disk);
 

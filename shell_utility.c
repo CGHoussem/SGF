@@ -33,13 +33,21 @@ char** parse(char* input){
 int executeLine(Disk disk, char* input){
     char** parsedInput = parse(input);
     if (strcmp(input, "mkdir") == 0){
-        mkdir(parsedInput[1], &disk, disk.inodes);
+		if(parsedInput[1] != NULL){
+			mkdir(parsedInput[1], &disk, disk.inodes);
+		} else {
+			printf("No directory name input \n");
+		}
         return 1;
     } else if (strcmp(input, "ls") == 0){
         ls(disk.inodes);
         return 1;
     } else if (strcmp(input, "touch") == 0){
-        mycreate(parsedInput[1], &disk, disk.inodes);
+		if(parsedInput[1] != NULL){
+			mycreate(parsedInput[1], &disk, disk.inodes);
+		} else {
+			printf("No file name input \n");
+		}
         return 1;
     } else if (strcmp(input, "cp") == 0){
         printf("IN DEV..\n");
