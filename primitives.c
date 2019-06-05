@@ -139,6 +139,22 @@ void cp(Inode** inodes,int number,Disk* disk){
 		}
 	}		
 }
+
+void cd (char *name,Inode *current_inode)
+{	
+	Directory_block* directory;
+	directory= current_inode->dir_blocks;
+	if (search_file_in_directory(name,directory))
+	{
+		current_inode = search_file_in_directory(name,directory);
+	}
+	else 
+	{
+		printf("This file %s doesn't exist\n",name);
+	}
+}
+		
+
 /*
 void mv(Inode source, Inode cible){
     

@@ -107,6 +107,10 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
     } else if (strcmp(input, "mv") == 0){
         printf("IN DEV..\n");
         return 1;
+    } else if (strcmp(input, "cd") ==0){
+	cd(parsedInput[1], current_inode);
+	return 1;
+
     
     } else if (strcmp(input, "rm") == 0){
         printf("IN DEV..\n");
