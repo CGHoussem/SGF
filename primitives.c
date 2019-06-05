@@ -140,13 +140,14 @@ void cp(Inode** inodes,int number,Disk* disk){
 	}		
 }
 
-void cd (char *name,Inode *current_inode)
+void cd (char *name,Inode *current_inode, Disk* disk)
 {	
 	Directory_block* directory;
 	directory= current_inode->dir_blocks;
 	if (search_file_in_directory(name,directory))
 	{
 		current_inode = search_file_in_directory(name,directory);
+		disk->inodes=current_inode;
 	}
 	else 
 	{
