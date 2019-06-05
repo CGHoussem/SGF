@@ -118,8 +118,13 @@ void init_permissions(char permissions[9]){
 }
 
 void free_inode(Disk* disk,Inode* inode){
-	if(inode->prev_inode != NULL)
+	if(inode->prev_inode != NULL) {
 		inode->prev_inode->next_inode=inode->next_inode;
+	}
+	if(inode->next_inode != NULL) {
+		inode->next_inode->prev_inode = inode->prev_inode;
+	}
+
 
 	if(inode->type == DIRECTORY){ 
 		free_block_directory(disk,inode->dir_blocks);
@@ -140,8 +145,12 @@ void free_inode(Disk* disk,Inode* inode){
 
 void free_block_directory(Disk* disk, Directory_block* block){
 
-	if (block->prev_block != NULL)
+	if (block->prev_block != NULL) {
 		block->prev_block->next_block=block->next_block;
+	}
+	if(block->next_block != NULL) {
+		block->next_block->prev_block = block->prev_block;
+	}
 	
 	free(block->tab_index);
 	free(block);
@@ -152,8 +161,12 @@ void free_block_directory(Disk* disk, Directory_block* block){
 
 void free_block_data(Disk* disk, Data_block* block){
 	
-	if(block->prev_block != NULL)
+	if(block->prev_block != NULL) {
 		block->prev_block->next_block=block->next_block;
+	}
+	if(block->next_block != NULL) {
+		block->next_block->prev_block = block->prev_block;
+	}
 	
 	free(block);
 	
@@ -273,6 +286,26 @@ void update_tab_index(Inode* current_inode, Inode* inode_to_add){
 	current_inode->dir_blocks->nb_index++;
 }
 
+void remove_tab_index(Inode* inode_to_remove,Disk* disk){
+	Index* new_index = NULL;
+	int i;
+	Inode* parent_inode = search_parent_inode(inode_to_remove,disk);
+	
+	new_index = allocation_index(parent_inode->dir_blocks->nb_index-1);
+	
+	for(i=0;i<parent_inode->dir_blocks->nb_index;i++){
+		if(parent_inode->dir_blocks->tab_index[i].inode != inode_to_remove) {
+			new_index[i] = parent_inode->dir_blocks->tab_index[i]; //copy the old index in the new one without the inode to remove
+		}
+	}
+	
+	free(parent_inode->dir_blocks->tab_index);
+	parent_inode->dir_blocks->tab_index = new_index;
+	
+	parent_inode->dir_blocks->nb_index--;
+}
+
+
 Inode* search_file_in_directory(char* file_name,Directory_block* directory) {
 	int i;
 	
@@ -285,5 +318,27 @@ Inode* search_file_in_directory(char* file_name,Directory_block* directory) {
 	}
 	return NULL;
 }
+
+Inode* search_parent_inode(Inode* inode,Disk* disk) {
+	Inode* parent_inode = disk->inodes;
+	Directory_block* directory;
+	int i;
+	
+	while(parent_inode != NULL) {
+		if(parent_inode->dir_blocks != NULL) {
+			directory = parent_inode->dir_blocks;
+			if(directory->nb_index > 2) {
+				for(i=0;i<directory->nb_index;i++) {
+					if(directory->tab_index[i].inode == inode) {
+						return parent_inode;
+					}
+				}
+			}
+		}
+		parent_inode = parent_inode->next_inode;
+	}
+	return NULL;
+}
+					
 
 

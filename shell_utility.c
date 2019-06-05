@@ -8,9 +8,7 @@
 #include "save_load_SGF.h"
 
 char* readline(){ 
-    char* input = malloc(sizeof(char) * SHELL_BUFFER_SIZE); //inutile de faire un malloc avec macro constante, c'est pas dynamique
-    //tableau statique + scanf est suffisant
-    //ou calcul nombre de caractere avec getchar et après tableau dynamique
+    char* input = malloc(sizeof(char) * SHELL_BUFFER_SIZE);
     int pos = 0;
     char c;
     while ((c = getchar()) != '\n' && c != EOF){
@@ -22,7 +20,7 @@ char* readline(){
 
 char** parse(char* input){
     int i = 0;
-    char** args = malloc(sizeof(char) * SHELL_BUFFER_SIZE); // pareil, malloc avec macro inutile
+    char** args = malloc(sizeof(char*) * SHELL_BUFFER_SIZE);
     const char* space = " ";
     char* arg = strtok(input, space);
     while (arg != NULL){
@@ -43,10 +41,12 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		} else {
 			printf("No directory name input \n");
 		}
+		free_input(input,parsedInput);
         return 1;
     
     } else if (strcmp(input, "ls") == 0){
         ls(disk->inodes);
+        free_input(input,parsedInput);
         return 1;
     
     } else if (strcmp(input, "touch") == 0){
@@ -55,12 +55,14 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		} else {
 			printf("No file name input \n");
 		}
+		free_input(input,parsedInput);
         return 1;
     
     } else if (strcmp(input, "cp") == 0){
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 2) {
 			printf("Missing file input \n");
+			free_input(input,parsedInput);
 			return 1;
 		}
 		
@@ -75,22 +77,27 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 					inodes_input[cpt] = path_to_destination(parsedInput[i],current_inode,disk);
 					if(inodes_input[cpt] == NULL) { //destination file doesn't exist
 						free(inodes_input);
+						free_input(input,parsedInput);
 						return 1;
 					}
 					if(nb_arg != 2 && (inodes_input[cpt])->type != DIRECTORY) {
 						printf("Error: More than a file to copy into a file \n");
+						remove_tab_index(inodes_input[cpt],disk);
 						free_inode(disk,inodes_input[cpt]);
 						free(inodes_input);
+						free_input(input,parsedInput);
 						return 1;
 					} 
 				} else { //source file
 					inodes_input[cpt] = path_to_inode(parsedInput[i],current_inode,disk);
 					if(inodes_input[cpt] == NULL) {
 						printf("Error: argument %d is not an existing file \n",(cpt+1));
+						free_input(input,parsedInput);
 						free(inodes_input);
 						return 1;
 					}else if(inodes_input[cpt]->type == DIRECTORY) {
 						printf("Error: argument %d is a directory \n",(cpt+1));
+						free_input(input,parsedInput);
 						free(inodes_input);
 						return 1;
 					}
@@ -102,33 +109,40 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		
 		cp(inodes_input,nb_arg,disk);
 		free(inodes_input);
+		free_input(input,parsedInput);
         return 1;
     
     } else if (strcmp(input, "mv") == 0){
         printf("IN DEV..\n");
+        free_input(input,parsedInput);
         return 1;
     } else if (strcmp(input, "cd") ==0){
 		if(parsedInput[1] != NULL){
 			cd(parsedInput[1], current_inode,disk);
-			}
-	return 1;
+		}
+		free_input(input,parsedInput);
+		return 1;
 
     
     } else if (strcmp(input, "rmdir") == 0){
         if(parsedInput[1] != NULL){
 			myrmdir(parsedInput[1], current_inode,disk);
-			}
-       return 1;
+		}
+		free_input(input,parsedInput);
+		return 1;
     
     } else if (strcmp(input, "help") == 0){
         printf("Available commands: mkdir, touch, ls, cp, mv, rm, exit\n");
+        free_input(input,parsedInput);
         return 1;
    
     } else if (strcmp(input, "exit") == 0){
+		free_input(input,parsedInput);
         return 0;
     
     } else {
         printf("%s: command not found\n", input);
+        free_input(input,parsedInput);
         return 1;
     }
 }
@@ -225,4 +239,9 @@ int count_path(char** parsedInput) {
 		i++;
 	}
 	return nb_arg;
+}
+
+void free_input(char* input,char** parsedInput) {
+	free(input);
+	free(parsedInput);
 }
