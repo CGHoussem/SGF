@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include "shell_utility.h"
 #include "command_shell.h"
 #include "primitives.h"
@@ -114,9 +114,11 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 	return 1;
 
     
-    } else if (strcmp(input, "rm") == 0){
-        printf("IN DEV..\n");
-        return 1;
+    } else if (strcmp(input, "rmdir") == 0){
+        if(parsedInput[1] != NULL){
+			rmdir(parsedInput[1], current_inode,disk);
+			}
+       return 1;
     
     } else if (strcmp(input, "help") == 0){
         printf("Available commands: mkdir, touch, ls, cp, mv, rm, exit\n");

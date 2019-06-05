@@ -154,7 +154,22 @@ void cd (char *name,Inode *current_inode, Disk* disk)
 		printf("This file %s doesn't exist\n",name);
 	}
 }
-		
+
+void rmdir (char *name, Inode *current_inode, Disk* disk)
+{
+	Directory_block* directory;
+	directory= current_inode->dir_blocks;
+	if (search_file_in_directory(name,directory))
+	{
+		free_block_directory(disk, directory);
+		free_inode(disk,search_file_in_directory(name,directory));
+	}
+	else 
+	{
+		printf("%s doesn't exist\n",name);
+	}
+	
+}
 
 /*
 void mv(Inode source, Inode cible){
@@ -168,8 +183,8 @@ void mv(Inode source, Inode cible){
     rm(source.name, source);
 
 }
-*/
-/*
+
+
 void rm(char* name, Inode prev_inode){
     Inode inode;
 
