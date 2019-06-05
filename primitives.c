@@ -155,7 +155,7 @@ void cd (char *name,Inode *current_inode, Disk* disk)
 	}
 }
 
-void rmdir (char *name, Inode *current_inode, Disk* disk)
+void myrmdir (char *name, Inode *current_inode, Disk* disk)
 {
 	Directory_block* directory;
 	directory= current_inode->dir_blocks;
