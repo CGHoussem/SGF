@@ -116,7 +116,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
     
     } else if (strcmp(input, "rmdir") == 0){
         if(parsedInput[1] != NULL){
-			rmdir(parsedInput[1], current_inode,disk);
+			myrmdir(parsedInput[1], current_inode,disk);
 			}
        return 1;
     
