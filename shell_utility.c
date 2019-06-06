@@ -36,6 +36,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 	Inode** inodes_input;
     char** parsedInput = parse(input);
     if (strcmp(input, "mkdir") == 0){
+		//TODO créer plusieurs dossier avec un seul mkdir
 		if(parsedInput[1] != NULL){
 			mkdir(parsedInput[1], disk, disk->inodes);
 		} else {
@@ -45,11 +46,12 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
         return 1;
     
     } else if (strcmp(input, "ls") == 0){
-        ls(disk->inodes);
+        ls(current_inode);
         free_input(input,parsedInput);
         return 1;
     
     } else if (strcmp(input, "touch") == 0){
+		//TODO gérer plusieurs fichiers + modification heure de modification
 		if(parsedInput[1] != NULL){
 			mycreate(parsedInput[1], disk, disk->inodes);
 		} else {
@@ -117,6 +119,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
         free_input(input,parsedInput);
         return 1;
     } else if (strcmp(input, "cd") ==0){
+		//TODO gérer cd hors du dossier courant
 		if(parsedInput[1] != NULL){
 			cd(parsedInput[1], current_inode,disk);
 		}
@@ -125,6 +128,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 
     
     } else if (strcmp(input, "rmdir") == 0){
+		//TODO gérer rmdir hors du dossier courant
         if(parsedInput[1] != NULL){
 			myrmdir(parsedInput[1], current_inode,disk);
 		}
