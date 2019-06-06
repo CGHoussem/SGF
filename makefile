@@ -19,7 +19,7 @@ primitives.o: primitives.c primitives.h
 command_shell.o: command_shell.c command_shell.h
 	$(CC) $(CFLAGS) -c -o command_shell.o command_shell.c
 
-sell_utility.o: shell_utility.c shell_utility.h
+shell_utility.o: shell_utility.c shell_utility.h
 	$(CC) $(CFLAGS) -c -o shell_utility.o shell_utility.c
 
 clean:
