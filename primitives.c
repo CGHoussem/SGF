@@ -9,21 +9,12 @@
 #include "constants.h"
 
 /*
-cp : pour copier un fichier dans un autre
-rm : pour supprimer un fichier
-mv : pour déplacer un fichier
 cat : pour concaténer des fichiers
 ln : pour créer un lien symbolique entre deux fichiers
 echo “texte” > file : pour écrire dans un fichier
-ls : pour afficher les éléments d’un répertoire
-mkdir : pour créer un répertoire
-rmdir : pour supprimer un répertoire
-cd : pour changer de répertoire courant
 df : pour avoir les infos du disque (nombre de blocs et d’inodes disponibles, et taille en octets de l’espace disponible)
 ln: creer liens symboliques
-chmod: changer droits d'acces fichiers
 */
-
 //TODO vérifier que le disque ne soit pas complet avant d'ajouter
 
 void mkdir(char* name,Disk* disk,Inode* current_inode){
@@ -99,20 +90,20 @@ void ls(Inode* current_inode) {
 	for(int i=0;i<number;i++) {
 		switch(current_inode->dir_blocks->tab_index[i].inode->type) { //file type
 			case TEXT:
-			strcpy(file_type,"Text");
-			break;
+				strcpy(file_type,"Text");
+				break;
 			case BINARY:
-			strcpy(file_type,"Binary");
-			break;
+				strcpy(file_type,"Binary");
+				break;
 			case DIRECTORY:
-			strcpy(file_type,"Directory");
-			break;
+				strcpy(file_type,"Directory");
+				break;
 			default:
-			break;
+				break;
 		}
-		printf("%s -> file type : %s\n",current_inode->dir_blocks->tab_index[i].name, file_type);
+		printf("%s -> file type : %s, rights : %s\n",current_inode->dir_blocks->tab_index[i].name, 
+		file_type, current_inode->dir_blocks->tab_index[i].inode->permissions);
 	}
-
 }
 
 void cp(Inode** inodes,int number,Disk* disk){
@@ -120,7 +111,7 @@ void cp(Inode** inodes,int number,Disk* disk){
 	Inode* source = NULL;
 	Inode* dest = NULL;
 	
-	for(i=0;i<number-2;i++) {
+	for(i=0;i<number-1;i++) {
 		source = inodes[i];
 		
 		if((inodes[number-1])->type == DIRECTORY){ //search destination
@@ -166,21 +157,6 @@ void cd (char *name,Inode *current_inode, Disk* disk){
 	}
 }
 
-void myrmdir (char *name, Inode *current_inode, Disk* disk){
-	Directory_block* directory;
-	directory= current_inode->dir_blocks;
-	if (search_file_in_directory(name,directory))
-	{
-		free_block_directory(disk, directory);
-		free_inode(disk,search_file_in_directory(name,directory));
-	}
-	else
-	{
-		printf("%s doesn't exist\n",name);
-	}
-	
-}
-
 void mv(Inode** inodes,int number,Disk* disk){
     
     int i,j;
@@ -222,18 +198,54 @@ void mv(Inode** inodes,int number,Disk* disk){
 		}
 	}
 }
-/*
 
-void rm(char* name, Inode prev_inode){
-    Inode inode;
+void rm(Inode** inodes,int number,Disk* disk){
+	int i;
+	printf("%d fichiers à supprimer\n", number);
+	for(i=0;i<number;i++) {
+		printf("%s\n", inodes[i]->name);
+		if(inodes[i] != NULL) { //file does exist
+			remove_tab_index(inodes[i],disk);
+			free_inode(disk,inodes[i]);
+		}
+		else { //file doesn't exist
+			printf("The file %s doesn't exist here ! \n", inodes[i]->name);
+		}
+	}		
+}
 
-	La fonction desalloc n'existe pas, il faut l'écrire (sinon c'est free la fonction) --Solenn
-	inode.tab_block = (Block*) desalloc(sizeof(Block)); 
+void rmdir(Inode** inodes,int number,Disk* disk){
 	
-	inode.dir_blocks=allocation_tab_block_directory(1);
+	int i;
+	printf("%d repertoires à supprimer\n", number);
+	for(i=0;i<number;i++) {
+		printf("%s\n", inodes[i]->name);
+		if(inodes[i] != NULL) { //file does exist
+			remove_tab_index(inodes[i],disk);
+			free_inode(disk,inodes[i]);
+		}
+		else { //file doesn't exist
+			printf("The directory %s doesn't exist here ! \n", inodes[i]->name);
+		}
+	}		
+}
 
-    // Il faut la variable disk pour la fonction init_block_directory --Houssem
-    //init_block_directory(inode.dir_blocks, inode, prev_inode);
-    
-    inode.next_inode=NULL;
-}*/
+void chmod(Inode** inodes,int number,char permissions[9],Disk* disk){
+	int i;
+	for(i=0;i<number;i++) {
+		if(inodes[i] != NULL) { //file does exist
+			inodes[i]->permissions[0] = permissions[0];
+			inodes[i]->permissions[1] = permissions[1];
+			inodes[i]->permissions[2] = permissions[2];
+			inodes[i]->permissions[3] = permissions[3];
+			inodes[i]->permissions[4] = permissions[4];
+			inodes[i]->permissions[5] = permissions[5];
+			inodes[i]->permissions[6] = permissions[6];
+			inodes[i]->permissions[7] = permissions[7];
+			inodes[i]->permissions[8] = permissions[8];
+		}
+		else { //file doesn't exist
+			printf("The file or directory %s doesn't exist here ! \n", inodes[i]->name);
+		}
+	}		
+}

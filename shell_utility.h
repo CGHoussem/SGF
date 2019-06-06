@@ -17,5 +17,7 @@ Inode* path_to_destination(char* parsedInput,Inode* current_inode,Disk* disk);
 int count_path(char** parsedInput);
 //free the input
 void free_input(char* input,char** parsedInput);
+//converts the rights input into an array representing the rights
+char* convertRights(int rights, int length, char permissions[9]);
 
 #endif
