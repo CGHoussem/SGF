@@ -36,6 +36,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 	Inode** inodes_input;
     char** parsedInput = parse(input);
     if (strcmp(input, "mkdir") == 0){
+		//TODO créer plusieurs dossier avec un seul mkdir
 		if(parsedInput[1] != NULL){
 			mkdir(parsedInput[1], disk, disk->inodes);
 		} else {
@@ -45,11 +46,12 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
         return 1;
     
     } else if (strcmp(input, "ls") == 0){
-        ls(disk->inodes);
+        ls(current_inode);
         free_input(input,parsedInput);
         return 1;
     
     } else if (strcmp(input, "touch") == 0){
+		//TODO gérer plusieurs fichiers + modification heure de modification
 		if(parsedInput[1] != NULL){
 			mycreate(parsedInput[1], disk, disk->inodes);
 		} else {
@@ -87,6 +89,59 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 						free(inodes_input);
 						free_input(input,parsedInput);
 						return 1;
+					}
+				} else { //source file
+					inodes_input[cpt] = path_to_inode(parsedInput[i],current_inode,disk);
+					if(inodes_input[cpt] == NULL) {
+						printf("Error: argument %d is not an existing file \n",(cpt+1));
+						free_input(input,parsedInput);
+						free(inodes_input);
+						return 1;
+					}else if(inodes_input[cpt]->type == DIRECTORY) {
+						printf("Error: argument %d is a directory \n",(cpt+1));
+						free_input(input,parsedInput);
+						free(inodes_input);
+						return 1;
+					}
+				}
+				cpt++;
+			}
+			i++;
+		}
+		cp(inodes_input,nb_arg,disk);
+		free(inodes_input);
+		free_input(input,parsedInput);
+        return 1;
+    
+    } else if (strcmp(input, "mv") == 0){
+		nb_arg = count_path(parsedInput);
+		if(nb_arg < 2) {
+			printf("Missing file input \n");
+			free_input(input,parsedInput);
+			return 1;
+		}
+		
+		inodes_input = (Inode**) malloc(nb_arg*sizeof(Inode*)); //input of move
+		
+		i = 1;
+		cpt = 0;
+		
+		while(parsedInput[i] != NULL) {
+			if(parsedInput[i][0] != '-') {
+				if(cpt == nb_arg-1) { //destination file
+					inodes_input[cpt] = path_to_destination(parsedInput[i],current_inode,disk);
+					if(inodes_input[cpt] == NULL) { //destination file doesn't exist
+						free(inodes_input);
+						free_input(input,parsedInput);
+						return 1;
+					}
+					if(nb_arg != 2 && (inodes_input[cpt])->type != DIRECTORY) {
+						printf("Error: More than a file to move into a file \n");
+						remove_tab_index(inodes_input[cpt],disk);
+						free_inode(disk,inodes_input[cpt]);
+						free(inodes_input);
+						free_input(input,parsedInput);
+						return 1;
 					} 
 				} else { //source file
 					inodes_input[cpt] = path_to_inode(parsedInput[i],current_inode,disk);
@@ -107,32 +162,20 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			i++;
 		}
 		
-		cp(inodes_input,nb_arg,disk);
+		mv(inodes_input,nb_arg,disk);
 		free(inodes_input);
 		free_input(input,parsedInput);
         return 1;
-    
-    } else if (strcmp(input, "mv") == 0){
-        printf("IN DEV..\n");
-        free_input(input,parsedInput);
-        return 1;
     } else if (strcmp(input, "cd") ==0){
+		//TODO gérer cd hors du dossier courant
 		if(parsedInput[1] != NULL){
 			cd(parsedInput[1], current_inode,disk);
 		}
 		free_input(input,parsedInput);
 		return 1;
 
-    
-    }else if( strcmp(input, "rm")==0){
-		if(parsedInput[1] != NULL){
-			rm(parsedInput[1], disk,current_inode);
-		}
-		free_input(input,parsedInput);
-		return 1;
-
-
-	}else if (strcmp(input, "rmdir") == 0){
+    } else if (strcmp(input, "rmdir") == 0){
+		//TODO gérer rmdir hors du dossier courant
         if(parsedInput[1] != NULL){
 			myrmdir(parsedInput[1], current_inode,disk);
 		}

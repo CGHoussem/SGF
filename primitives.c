@@ -20,12 +20,19 @@ mkdir : pour créer un répertoire
 rmdir : pour supprimer un répertoire
 cd : pour changer de répertoire courant
 df : pour avoir les infos du disque (nombre de blocs et d’inodes disponibles, et taille en octets de l’espace disponible)
+ln: creer liens symboliques
+chmod: changer droits d'acces fichiers
 */
 
+//TODO vérifier que le disque ne soit pas complet avant d'ajouter
+
 void mkdir(char* name,Disk* disk,Inode* current_inode){
-	//TODO Vérifier que le dossier n'existe pas déjà
 	Inode* inode = NULL;
 	
+	if(current_inode != NULL && search_file_in_directory(name,current_inode->dir_blocks) != NULL) {
+		printf("Error: The file already exist in this directory \n");
+		return;
+	}
 	inode = (Inode*)malloc(sizeof(Inode));
 	
 	strcpy(inode->name, name);
@@ -55,8 +62,13 @@ void mkdir(char* name,Disk* disk,Inode* current_inode){
 }
 
 void mycreate(char* name,Disk* disk,Inode* current_inode){
-	//TODO Vérifier que le fichier n'existe pas déjà
     Inode* inode = NULL;
+    
+    if(search_file_in_directory(name,current_inode->dir_blocks) != NULL) {
+		printf("Error: The file already exist in this directory \n");
+		return;
+	}
+	
 	inode = (Inode*)malloc(sizeof(Inode));
 	
 	strcpy(inode->name, name);
@@ -140,8 +152,7 @@ void cp(Inode** inodes,int number,Disk* disk){
 	}		
 }
 
-void cd (char *name,Inode *current_inode, Disk* disk)
-{	
+void cd (char *name,Inode *current_inode, Disk* disk){	
 	Directory_block* directory;
 	directory= current_inode->dir_blocks;
 	if (search_file_in_directory(name,directory))
@@ -155,8 +166,7 @@ void cd (char *name,Inode *current_inode, Disk* disk)
 	}
 }
 
-void myrmdir (char *name, Inode *current_inode, Disk* disk)
-{
+void myrmdir (char *name, Inode *current_inode, Disk* disk){
 	Directory_block* directory;
 	directory= current_inode->dir_blocks;
 	if (search_file_in_directory(name,directory))
@@ -164,26 +174,55 @@ void myrmdir (char *name, Inode *current_inode, Disk* disk)
 		free_block_directory(disk, directory);
 		free_inode(disk,search_file_in_directory(name,directory));
 	}
-	else 
+	else
 	{
 		printf("%s doesn't exist\n",name);
 	}
 	
 }
 
-/*
-void mv(Inode source, Inode cible){
+void mv(Inode** inodes,int number,Disk* disk){
     
-    if (source != cible){
-        cp(source,cible);
+    int i,j;
+	Inode* source = NULL;
+	Inode* dest = NULL;
+	
+	for(i=0;i<number-2;i++) {
+		source = inodes[i];
+		
+		if((inodes[number-1])->type == DIRECTORY){ //search destination
+			dest = search_file_in_directory(source->name,(inodes[number-1])->dir_blocks);
+			if(dest == NULL) { //file doesn't exist
+				mycreate(source->name,disk,inodes[number-1]);
+				dest = get_last_inode(*disk);
+			}
+		} else {
+			dest = inodes[number-1];
+		}
+		
+		//delete the old inode (which corresponds to the old location)
+		remove_tab_index(source,disk);
+		free_inode(disk,source);
 
-    }
-    
-    cp(source,cible);
-    rm(source.name, source);
-
+		//copy the inode's informations
+		for(j=0;j<9;j++){
+			dest->permissions[i] = source->permissions[i];
+		}
+		dest-> date_modification = time(NULL);
+		
+		if(dest->data_blocks->size != 0) {
+			for(j=0;j<dest->data_blocks->size;j++){ //delete the old data
+				dest->data_blocks->data[i] = 0;
+			}
+		}
+		
+		dest->data_blocks->size = source->data_blocks->size;
+		for(j=0;j<dest->data_blocks->size;j++){ //write the new data
+			dest->data_blocks->data[i] = source->data_blocks->data[i];
+		}
+	}
 }
-
+/*
 
 void rm(char* name, Inode prev_inode){
     Inode inode;
@@ -197,5 +236,4 @@ void rm(char* name, Inode prev_inode){
     //init_block_directory(inode.dir_blocks, inode, prev_inode);
     
     inode.next_inode=NULL;
-}
-*/
+}*/
