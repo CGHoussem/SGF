@@ -22,15 +22,10 @@ cd : pour changer de répertoire courant
 df : pour avoir les infos du disque (nombre de blocs et d’inodes disponibles, et taille en octets de l’espace disponible)
 */
 
-//TODO vérifier que le disque ne soit pas complet avant d'ajouter
-
 void mkdir(char* name,Disk* disk,Inode* current_inode){
+	//TODO Vérifier que le dossier n'existe pas déjà
 	Inode* inode = NULL;
 	
-	if(current_inode != NULL && search_file_in_directory(name,current_inode->dir_blocks) != NULL) {
-		printf("Error: The file already exist in this directory \n");
-		return;
-	}
 	inode = (Inode*)malloc(sizeof(Inode));
 	
 	strcpy(inode->name, name);
@@ -60,13 +55,8 @@ void mkdir(char* name,Disk* disk,Inode* current_inode){
 }
 
 void mycreate(char* name,Disk* disk,Inode* current_inode){
+	//TODO Vérifier que le fichier n'existe pas déjà
     Inode* inode = NULL;
-    
-    if(search_file_in_directory(name,current_inode->dir_blocks) != NULL) {
-		printf("Error: The file already exist in this directory \n");
-		return;
-	}
-	
 	inode = (Inode*)malloc(sizeof(Inode));
 	
 	strcpy(inode->name, name);
