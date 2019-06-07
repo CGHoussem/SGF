@@ -5,6 +5,7 @@
 #define MAX_FILE_NAME   24
 #define BUFFER_SIZE     1024
 #define SHELL_BUFFER_SIZE   64
+#define ASCII_OFFSET 48
 
 #define TEXT 1
 #define BINARY 2

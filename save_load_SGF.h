@@ -35,5 +35,7 @@ void free_disk(Disk* disk); //delete the disk
 void init_block_directory(Directory_block* block,Inode* inode_directory,Inode* inode_parent_directory,Disk* disk); //initialization of a directory block
 void init_block_data(Data_block* block,Disk* disk); //initialization of a data block
 void init_permissions(char permissions[9]); //initialization of permissions
+void delete_permissions(char permissions[9]); //deletion of permissions
+
 
 #endif

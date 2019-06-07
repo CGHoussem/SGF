@@ -117,6 +117,18 @@ void init_permissions(char permissions[9]){
 	permissions[8]='-';
 }
 
+void delete_permissions(char permissions[9]){
+	permissions[0]='-';
+	permissions[1]='-';
+	permissions[2]='-';
+	permissions[3]='-';
+	permissions[4]='-';
+	permissions[5]='-';
+	permissions[6]='-';
+	permissions[7]='-';
+	permissions[8]='-';
+}
+
 void free_inode(Disk* disk,Inode* inode){
 	if(inode->prev_inode != NULL) {
 		inode->prev_inode->next_inode=inode->next_inode;

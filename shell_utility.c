@@ -277,11 +277,11 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			return 1;
 		}
 
-		char digit;
+		int digit;
 		
 		// verifying the integer input concerning the rights
 		for(int i=0;i<length;i++) {
-			digit = parsedInput[1][i];
+			digit = (int)parsedInput[1][i] - ASCII_OFFSET;
 			if(isdigit(parsedInput[1][i]))
 			{
 				if(digit == 8 || digit == 9) {	
@@ -297,8 +297,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			}
 		}
 		
-		int rights = atoi(parsedInput[1]);
-		printf ("Given input is a number : %d\n", rights);
+		printf ("Given input is a number : %s\n", parsedInput[1]);
 		
 		//files input of chmod
 		inodes_input = (Inode**) malloc(nb_arg*sizeof(Inode*));
@@ -310,7 +309,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			if(parsedInput[i][0] != '-') {
 				inodes_input[cpt] = path_to_inode(parsedInput[i],current_inode,disk);
 				if(inodes_input[cpt] == NULL) {
-					printf("Error: argument %d is not an existing file/directory \n",(cpt+1));
+					printf("Error: argument %d is not an existing file/directory \n",(cpt+2));
 					free_input(input,parsedInput);
 					free(inodes_input);
 					return 1;
@@ -321,7 +320,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		}
 		
 		char permissions[9];
-		strcpy(permissions, convertRights(rights, length, permissions));
+		strcpy(permissions, convertRights(parsedInput[1], length, permissions));
 		chmod(inodes_input,nb_arg-1,permissions,disk);
 		free(inodes_input);
 		free_input(input,parsedInput);
@@ -345,41 +344,58 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
     }
 }
 
-char* convertRights(int rights, int length, char permissions[9]) {
+char* convertRights(char* rights, int length, char permissions[9]) {
 
-	int i;
-	init_permissions(permissions);
-	
+	int rights_user, rights_group, rights_other;
+
+	delete_permissions(permissions);
+
 	switch(length) {
 		case 1:
-			for(i=0;i<6;i++) permissions[i] = '-';
-			permissions[6] = 'r';
-			permissions[7] = 'w';
-			permissions[8] = 'x';
+			rights_other = (int)rights[0] - ASCII_OFFSET;
 			break;
 		case 2:
-			for(i=0;i<3;i++) permissions[i] = '-';
-			permissions[3] = 'r';
-			permissions[4] = 'w';
-			permissions[5] = 'x';
-			permissions[6] = 'r';
-			permissions[7] = 'w';
-			permissions[8] = 'x';
+			;
+			rights_group = (int)rights[0] - ASCII_OFFSET;
+			rights_other = (int)rights[1] - ASCII_OFFSET;
+			
+			if(rights_group > 0) {
+				if(rights_group >= 4) permissions[3] = 'r';
+				if(rights_group%6 == 0 || rights_other == 7) permissions[4] = 'w';
+				if(rights_group%2 != 0) permissions[5] = 'x';
+			}
+			
 			break;
+			
 		case 3:
-			permissions[0] = 'r';
-			permissions[1] = 'w';
-			permissions[2] = 'x';
-			permissions[3] = 'r';
-			permissions[4] = 'w';
-			permissions[5] = 'x';
-			permissions[6] = 'r';
-			permissions[7] = 'w';
-			permissions[8] = 'x';
+			;
+			rights_user = (int)rights[0] - ASCII_OFFSET;
+			rights_group = (int)rights[1] - ASCII_OFFSET;
+			rights_other = (int)rights[2] - ASCII_OFFSET;
+			//printf("%d %d %d", rights_user, rights_group, rights_other);
+			
+			if(rights_user > 0) {
+				if(rights_user >= 4) permissions[0] = 'r';
+				if(42%rights_user == 0 && rights_user != 1) permissions[1] = 'w';
+				if(rights_user%2 != 0) permissions[2] = 'x';
+			}
+			
+			if(rights_group > 0) {
+				if(rights_group >= 4) permissions[3] = 'r';
+				if(42%rights_group == 0 && rights_group != 1) permissions[4] = 'w';
+				if(rights_group%2 != 0) permissions[5] = 'x';
+			}
+			
 			break;
 		default:
 			break;
 	}
+	
+	if(rights_other > 0) {
+		if(rights_other >= 4) permissions[6] = 'r';
+		if(42%rights_other == 0 && rights_other != 1) permissions[7] = 'w';
+		if(rights_other%2 != 0) permissions[8] = 'x';
+	}	
 	
 	return permissions;
 }
