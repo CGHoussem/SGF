@@ -114,7 +114,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		free_input(input,parsedInput);
         return 1;
     
-    } else if (strcmp(input, "mv") == 0){
+    } else if (strcmp(input, "mymv") == 0){
 		//TODO supprimer inode(s) source(s) ou les modifier uniquement
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 2) {
@@ -164,7 +164,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			i++;
 		}
 		
-		mv(inodes_input,nb_arg,disk);
+		mymv(inodes_input,nb_arg,disk);
 		free(inodes_input);
 		free_input(input,parsedInput);
         return 1;
@@ -179,7 +179,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		return 1;
 
     
-    } else if (strcmp(input, "rm") ==0){
+    } else if (strcmp(input, "myrm") ==0){
 		//TODO : gérer plusieurs suppressions, vérifier la récupération de l'inode
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 1) {
@@ -213,13 +213,13 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			i++;
 		}
 		
-		rm(inodes_input,nb_arg,disk);
+		myrm(inodes_input,nb_arg,disk);
 		free(inodes_input);
 		free_input(input,parsedInput);
         return 1;
 
     
-    } else if (strcmp(input, "rmdir") == 0){
+    } else if (strcmp(input, "myrmdir") == 0){
 		//TODO : gérer plusieurs suppressions, vérifier la récupération de l'inode
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 1) {
@@ -253,13 +253,13 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			i++;
 		}
 		
-		rmdir(inodes_input,nb_arg,disk);
+		myrmdir(inodes_input,nb_arg,disk);
 		free(inodes_input);
 		free_input(input,parsedInput);
         return 1;
     
 	
-	} else if (strcmp(input, "chmod") == 0){
+	} else if (strcmp(input, "mychmod") == 0){
 		
         nb_arg = count_path(parsedInput);
         
@@ -322,7 +322,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		
 		char permissions[9];
 		strcpy(permissions, convertRights(parsedInput[1], length, permissions));
-		chmod(inodes_input,nb_arg-1,permissions,disk);
+		mychmod(inodes_input,nb_arg-1,permissions,disk);
 		free(inodes_input);
 		free_input(input,parsedInput);
         return 1;
@@ -369,7 +369,7 @@ char* convertRights(char* rights, int length, char permissions[9]) {
 			rights_other = (int)rights[0] - ASCII_OFFSET;
 			break;
 		case 2:
-			;
+			
 			rights_group = (int)rights[0] - ASCII_OFFSET;
 			rights_other = (int)rights[1] - ASCII_OFFSET;
 			
@@ -382,7 +382,7 @@ char* convertRights(char* rights, int length, char permissions[9]) {
 			break;
 			
 		case 3:
-			;
+			
 			rights_user = (int)rights[0] - ASCII_OFFSET;
 			rights_group = (int)rights[1] - ASCII_OFFSET;
 			rights_other = (int)rights[2] - ASCII_OFFSET;
@@ -401,8 +401,7 @@ char* convertRights(char* rights, int length, char permissions[9]) {
 			}
 			
 			break;
-		default:
-			break;
+		
 	}
 	
 	if(rights_other > 0) {

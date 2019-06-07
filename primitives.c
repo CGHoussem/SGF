@@ -156,7 +156,7 @@ void cd (char *name,Inode *current_inode, Disk* disk){
 	}
 }
 
-void mv(Inode** inodes,int number,Disk* disk){
+void mymv(Inode** inodes,int number,Disk* disk){
     
     int i,j;
 	Inode* source = NULL;
@@ -198,7 +198,7 @@ void mv(Inode** inodes,int number,Disk* disk){
 	}
 }
 
-void rm(Inode** inodes,int number,Disk* disk){
+void myrm(Inode** inodes,int number,Disk* disk){
 	int i;
 	printf("%d fichiers à supprimer\n", number);
 	for(i=0;i<number;i++) {
@@ -213,7 +213,7 @@ void rm(Inode** inodes,int number,Disk* disk){
 	}		
 }
 
-void rmdir(Inode** inodes,int number,Disk* disk){
+void myrmdir(Inode** inodes,int number,Disk* disk){
 	
 	int i;
 	printf("%d repertoires à supprimer\n", number);
@@ -229,7 +229,7 @@ void rmdir(Inode** inodes,int number,Disk* disk){
 	}		
 }
 
-void chmod(Inode** inodes,int number,char permissions[9],Disk* disk){
+void mychmod(Inode** inodes,int number,char permissions[9],Disk* disk){
 	int i;
 	for(i=0;i<number;i++) {
 		if(inodes[i] != NULL) { //file does exist
