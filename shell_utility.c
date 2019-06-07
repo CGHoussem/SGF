@@ -260,6 +260,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
     
 	
 	} else if (strcmp(input, "chmod") == 0){
+		
         nb_arg = count_path(parsedInput);
         
         if(nb_arg < 2) {
@@ -325,6 +326,19 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		free(inodes_input);
 		free_input(input,parsedInput);
         return 1;
+		
+		return 1;
+    
+    } else if (strcmp(input, "df") == 0){
+		//TODO : afficher plus d'infos (limites, mieux calculer l'espace restant)
+        nb_arg = count_path(parsedInput);
+        if(nb_arg > 0) {
+			printf("df doesn't require arguments\n");
+			free_input(input,parsedInput);
+			return 1;
+		}
+		
+		df(disk);
 		
 		return 1;
     

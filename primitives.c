@@ -9,10 +9,9 @@
 #include "constants.h"
 
 /*
-cat : pour concaténer des fichiers
+cat : pour concaténer des fichiers (peut display mais aussi rediriger)
 ln : pour créer un lien symbolique entre deux fichiers
 echo “texte” > file : pour écrire dans un fichier
-df : pour avoir les infos du disque (nombre de blocs et d’inodes disponibles, et taille en octets de l’espace disponible)
 ln: creer liens symboliques
 */
 //TODO vérifier que le disque ne soit pas complet avant d'ajouter
@@ -248,4 +247,14 @@ void chmod(Inode** inodes,int number,char permissions[9],Disk* disk){
 			printf("The file or directory %s doesn't exist here ! \n", inodes[i]->name);
 		}
 	}		
+}
+
+void df(Disk* disk) {
+	int available = DISK_BYTES_LIMIT-(disk->nb_data_blocks*1024);
+	
+	printf("\n#### Informations about your disk : ####\n\n");
+	printf("Nombre d'inodes utilisés : %d\n", disk->nb_inode);
+	printf("Nombre de blocs de données utilisés : %d\n", disk->nb_data_blocks);
+	printf("Nombre de blocs de répertoires utilisés : %d\n", disk->nb_dir_blocks);
+	printf("Taille de l'espace disponible :  %d octets\n\n", available);
 }

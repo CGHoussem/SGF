@@ -10,5 +10,6 @@ void rmdir(Inode** inodes,int number,Disk* disk);
 void mv(Inode** inodes,int number,Disk* disk);
 void rm(Inode** inodes,int number,Disk* disk);
 void chmod(Inode** inodes,int number,char permissions[9],Disk* disk);
+void df(Disk* disk);
 
 #endif
