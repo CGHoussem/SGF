@@ -150,39 +150,9 @@ void mymv(Inode** inodes,int number,Disk* disk){
 	Inode* source = NULL;
 	Inode* dest = NULL;
 	
-	for(i=0;i<number-2;i++) {
-		source = inodes[i];
-		
-		if((inodes[number-1])->type == DIRECTORY){ //search destination
-			dest = search_file_in_directory(source->name,(inodes[number-1])->dir_blocks);
-			if(dest == NULL) { //file doesn't exist
-				mycreate(source->name,disk,inodes[number-1]);
-				dest = get_last_inode(*disk);
-			}
-		} else {
-			dest = inodes[number-1];
-		}
-		
-		//delete the old inode (which corresponds to the old location)
-		remove_tab_index(source,disk);
-		free_inode(disk,source);
-
-		//copy the inode's informations
-		for(j=0;j<9;j++){
-			dest->permissions[i] = source->permissions[i];
-		}
-		dest-> date_modification = time(NULL);
-		
-		if(dest->data_blocks->size != 0) {
-			for(j=0;j<dest->data_blocks->size;j++){ //delete the old data
-				dest->data_blocks->data[i] = 0;
-			}
-		}
-		
-		dest->data_blocks->size = source->data_blocks->size;
-		for(j=0;j<dest->data_blocks->size;j++){ //write the new data
-			dest->data_blocks->data[i] = source->data_blocks->data[i];
-		}
+	cp(inodes,number,disk);
+	for(i=0;i<number-1;i++) {
+		myrm(inodes[i],disk);
 	}
 }
 
@@ -190,22 +160,6 @@ void myrm(Inode* inode,Disk* disk){
 	remove_tab_index(inode,disk);
 	free_inode(disk,inode);
 		
-}
-
-void myrmdir(Inode** inodes,int number,Disk* disk){
-	
-	int i;
-	printf("%d repertoires à supprimer\n", number);
-	for(i=0;i<number;i++) {
-		printf("%s\n", inodes[i]->name);
-		if(inodes[i] != NULL) { //file does exist
-			remove_tab_index(inodes[i],disk);
-			free_inode(disk,inodes[i]);
-		}
-		else { //file doesn't exist
-			printf("The directory %s doesn't exist here ! \n", inodes[i]->name);
-		}
-	}		
 }
 
 void mychmod(Inode** inodes,int number,char permissions[9],Disk* disk){
