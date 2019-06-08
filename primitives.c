@@ -186,19 +186,10 @@ void mymv(Inode** inodes,int number,Disk* disk){
 	}
 }
 
-void myrm(Inode** inodes,int number,Disk* disk){
-	int i;
-	printf("%d fichiers à supprimer\n", number);
-	for(i=0;i<number;i++) {
-		printf("%s\n", inodes[i]->name);
-		if(inodes[i] != NULL) { //file does exist
-			remove_tab_index(inodes[i],disk);
-			free_inode(disk,inodes[i]);
-		}
-		else { //file doesn't exist
-			printf("The file %s doesn't exist here ! \n", inodes[i]->name);
-		}
-	}		
+void myrm(Inode* inode,Disk* disk){
+	remove_tab_index(inode,disk);
+	free_inode(disk,inode);
+		
 }
 
 void myrmdir(Inode** inodes,int number,Disk* disk){

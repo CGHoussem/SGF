@@ -207,7 +207,6 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 
     
     } else if (strcmp(input, "rm") ==0){
-		//TODO : gérer plusieurs suppressions, vérifier la récupération de l'inode
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 1) {
 			printf("Missing file input \n");
@@ -215,39 +214,29 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			return 1;
 		}
 		
-		inodes_input = (Inode**) malloc(nb_arg*sizeof(Inode*)); //input of move
-		
 		i = 1;
-		cpt = 0;
 		
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
-				inodes_input[cpt] = path_to_inode(parsedInput[i],current_inode,disk);
-				if(inodes_input[cpt] == NULL) {
-					printf("Error: argument %d is not an existing file \n",(cpt+1));
-					free_input(input,parsedInput);
-					free(inodes_input);
-					return 1;
-				} else if(inodes_input[cpt]->type == DIRECTORY) {
-					printf("Error: argument %d is a directory \n",(cpt+1));
-					free_input(input,parsedInput);
-					free(inodes_input);
-					return 1;
+				inode = path_to_inode(parsedInput[i],current_inode,disk);
+				if(inode == NULL) {
+					printf("Error: argument %d is not an existing file \n",i);
+				} 
+				else if(inode->type == DIRECTORY) {
+					printf("Error: argument %d is a directory \n",i);
+				} 
+				else {
+					myrm(inode,disk);
 				}
-				printf("suppression à venir : %s\n",parsedInput[i]);
-				cpt++;
 			}
 			i++;
 		}
 		
-		myrm(inodes_input,nb_arg,disk);
-		free(inodes_input);
 		free_input(input,parsedInput);
         return 1;
 
     
     } else if (strcmp(input, "rmdir") == 0){
-		//TODO : gérer plusieurs suppressions, vérifier la récupération de l'inode
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 1) {
 			printf("Missing directory input \n");
@@ -255,33 +244,27 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			return 1;
 		}
 		
-		inodes_input = (Inode**) malloc(nb_arg*sizeof(Inode*)); //input of move
-		
 		i = 1;
-		cpt = 0;
 		
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
-				inodes_input[cpt] = path_to_inode(parsedInput[i],current_inode,disk);
-				if(inodes_input[cpt] == NULL) {
-					printf("Error: argument %d is not an existing directory \n",(cpt+1));
-					free_input(input,parsedInput);
-					free(inodes_input);
-					return 1;
-				} else if(inodes_input[cpt]->type != DIRECTORY) {
-					printf("Error: argument %d is a file \n",(cpt+1));
-					free_input(input,parsedInput);
-					free(inodes_input);
-					return 1;
+				inode = path_to_inode(parsedInput[i],current_inode,disk);
+				if(inode == NULL) {
+					printf("Error: argument %d is not an existing directory \n",i);
+				} 
+				else if(inode->type != DIRECTORY) {
+					printf("Error: argument %d is not a directory \n",i);
 				}
-				printf("suppression à venir : %s\n",parsedInput[i]);
-				cpt++;
+				else if(inode->dir_blocks->nb_index > 2) {
+					printf("Error: argument %d is not an empty directory \n",i);
+				}
+				else {
+					myrm(inode,disk);
+				}
 			}
 			i++;
 		}
 		
-		myrmdir(inodes_input,nb_arg,disk);
-		free(inodes_input);
 		free_input(input,parsedInput);
         return 1;
     
@@ -520,7 +503,7 @@ Inode* path_to_destination_directory(char* parsedInput,Inode* current_inode,Disk
 		}	
 	}
 	if(create == 0) {
-		printf("Error: The file already exist in this directory \n");
+		printf("Error: The file %s already exist in this directory \n",next_inode->name);
 	}
 	return next_inode;
 }

@@ -154,6 +154,10 @@ void free_inode(Disk* disk,Inode* inode){
 	
 	disk->nb_inode--;
 	
+	if(disk->nb_inode == 0) {
+		disk->inodes = NULL;
+	}
+	
 }
 
 void free_block_directory(Disk* disk, Directory_block* block){
@@ -169,6 +173,10 @@ void free_block_directory(Disk* disk, Directory_block* block){
 	free(block);
 	
 	disk->nb_dir_blocks--;
+	
+	if(disk->nb_dir_blocks == 0) {
+		disk->dir_blocks = NULL;
+	}
 
 }
 
@@ -184,6 +192,10 @@ void free_block_data(Disk* disk, Data_block* block){
 	free(block);
 	
 	disk->nb_data_blocks--;	
+	
+	if(disk->nb_data_blocks == 0) {
+		disk->data_blocks = NULL;
+	}
 }
 
 void free_disk(Disk* disk){
@@ -201,7 +213,7 @@ void free_disk(Disk* disk){
 Inode* get_last_inode(Disk disk){
 	Inode* current_inode = disk.inodes;
 	
-	while(current_inode->next_inode != NULL){
+	while(current_inode != NULL && current_inode->next_inode != NULL){
 		current_inode = current_inode->next_inode;
 	}
 	
@@ -228,7 +240,7 @@ void add_inode(Inode* inode, Disk* disk){
 Directory_block* get_last_dir_block(Disk disk){
 	Directory_block* current_dir_block = disk.dir_blocks;
 	
-	while(current_dir_block->next_block != NULL){
+	while(current_dir_block != NULL && current_dir_block->next_block != NULL){
 		current_dir_block = current_dir_block->next_block;
 	}
 	
@@ -255,7 +267,7 @@ void add_dir_block(Directory_block* dir_block, Disk* disk){
 Data_block* get_last_data_block(Disk disk){
 	Data_block* current_data_block = disk.data_blocks;
 	
-	while(current_data_block->next_block != NULL){
+	while(current_data_block != NULL && current_data_block->next_block != NULL){
 		current_data_block = current_data_block->next_block;
 	}
 	
@@ -297,18 +309,22 @@ void update_tab_index(Inode* current_inode, Inode* inode_to_add){
 	current_inode->dir_blocks->tab_index = new_index;
 	
 	current_inode->dir_blocks->nb_index++;
+	
 }
 
 void remove_tab_index(Inode* inode_to_remove,Disk* disk){
 	Index* new_index = NULL;
 	int i;
+	int j = 0;
 	Inode* parent_inode = search_parent_inode(inode_to_remove,disk);
 	
 	new_index = allocation_index(parent_inode->dir_blocks->nb_index-1);
+
 	
 	for(i=0;i<parent_inode->dir_blocks->nb_index;i++){
 		if(parent_inode->dir_blocks->tab_index[i].inode != inode_to_remove) {
-			new_index[i] = parent_inode->dir_blocks->tab_index[i]; //copy the old index in the new one without the inode to remove
+			new_index[j] = parent_inode->dir_blocks->tab_index[i]; //copy the old index in the new one without the inode to remove
+			j++;
 		}
 	}
 	
@@ -316,6 +332,7 @@ void remove_tab_index(Inode* inode_to_remove,Disk* disk){
 	parent_inode->dir_blocks->tab_index = new_index;
 	
 	parent_inode->dir_blocks->nb_index--;
+
 }
 
 

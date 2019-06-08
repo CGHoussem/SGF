@@ -8,7 +8,7 @@ void cp(Inode** inodes,int number,Disk* disk); //copy the (number - 1) first ino
 void cd(char *name,Inode *current_inode,Disk* disk);
 void myrmdir(Inode** inodes,int number,Disk* disk);
 void mymv(Inode** inodes,int number,Disk* disk);
-void myrm(Inode** inodes,int number,Disk* disk);
+void myrm(Inode* inode,Disk* disk);
 void mychmod(Inode** inodes,int number,char permissions[9],Disk* disk);
 void df(Disk* disk);
 
