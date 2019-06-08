@@ -137,6 +137,9 @@ void free_inode(Disk* disk,Inode* inode){
 	if(inode->next_inode != NULL) {
 		inode->next_inode->prev_inode = inode->prev_inode;
 	}
+	if(inode->prev_inode == NULL) {
+		disk->inodes = inode->next_inode;
+	}
 
 
 	if(inode->type == DIRECTORY){ 
@@ -154,10 +157,6 @@ void free_inode(Disk* disk,Inode* inode){
 	
 	disk->nb_inode--;
 	
-	if(disk->nb_inode == 0) {
-		disk->inodes = NULL;
-	}
-	
 }
 
 void free_block_directory(Disk* disk, Directory_block* block){
@@ -168,15 +167,14 @@ void free_block_directory(Disk* disk, Directory_block* block){
 	if(block->next_block != NULL) {
 		block->next_block->prev_block = block->prev_block;
 	}
+	if(block->prev_block == NULL) {
+		disk->dir_blocks = block->next_block;
+	}
 	
 	free(block->tab_index);
 	free(block);
 	
 	disk->nb_dir_blocks--;
-	
-	if(disk->nb_dir_blocks == 0) {
-		disk->dir_blocks = NULL;
-	}
 
 }
 
@@ -188,14 +186,13 @@ void free_block_data(Disk* disk, Data_block* block){
 	if(block->next_block != NULL) {
 		block->next_block->prev_block = block->prev_block;
 	}
+	if(block->prev_block == NULL) {
+		disk->data_blocks = block->next_block;
+	}
 	
 	free(block);
 	
 	disk->nb_data_blocks--;	
-	
-	if(disk->nb_data_blocks == 0) {
-		disk->data_blocks = NULL;
-	}
 }
 
 void free_disk(Disk* disk){
