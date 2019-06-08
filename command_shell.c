@@ -356,7 +356,40 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
         free_input(input,parsedInput);
         return 1;
    
-    } else if (strcmp(input, "exit") == 0){
+    }else if(strcmp(input,"ln")==0){
+		/* 
+		nb_arg=count_path(parsedInput);
+		
+		if(nb_arg < 1) {
+			printf("Missing files to link input \n");
+			free_input(input,parsedInput);
+			return 1;
+		}
+		
+		i = 1;
+		
+		while(parsedInput[i] != NULL) {
+			if(parsedInput[i][0] != '-') {
+				inode = path_to_inode(parsedInput[i],current_inode,disk);
+				if(inode == NULL) {
+					printf("Error: argument %d is not an existing file \n",i);
+				} 
+				else if(inode->type != (BINARY ||TEXT)) {
+					printf("Error: argument %d is not a file \n",i);
+				}
+				
+				else {
+					ln(&inode,inode,disk);
+				}
+			}
+			i++;
+		}
+		
+		free_input(input,parsedInput);
+        return 1;
+		*/
+
+	}else if (strcmp(input, "exit") == 0){
 		free_input(input,parsedInput);
         return 0;
     

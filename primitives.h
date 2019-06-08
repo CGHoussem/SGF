@@ -11,5 +11,6 @@ void mymv(Inode** inodes,int number,Disk* disk);
 void myrm(Inode* inode,Disk* disk);
 void mychmod(Inode** inodes,int number,char permissions[9],Disk* disk);
 void df(Disk* disk);
+//void ln(Inode** inode, Inode* current_inode,Disk* disk);
 
 #endif

@@ -237,3 +237,28 @@ void df(Disk* disk) {
 	printf("Nombre de blocs de répertoires utilisés : %d\n", disk->nb_dir_blocks);
 	printf("Taille de l'espace disponible :  %d octets\n\n", available);
 }
+
+/* 
+
+void ln(Inode** inode, Inode* current_inode,Disk* disk){
+	int nbr_inode=sizeof*inode;
+	
+	if (nbr_inode==1){ //add in the current directory an index associated with this inode without changing the name of the file.
+			
+		update_tab_index(current_inode,*inode);
+	}
+	else if(nbr_inode==2){ //create a symbolic link (once again, an index) of the first inode given, and will give the name of the second one to the created index.
+		update_tab_index(current_inode,inode[0]);
+		Inode* tmp=inode[0];
+		inode[1]=tmp;
+		
+		update_tab_index(current_inode,inode[1]);
+	}
+	else{ //add to the directory block the index of each file in the array (except the directory) and without changing the name.
+		//inode->dir_blocks->tab_index[i]
+		for (int i=0;i<nbr_inode;i++){
+		
+			update_tab_index(current_inode, inode[i]);
+		}
+	}
+}*/
