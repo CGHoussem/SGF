@@ -19,10 +19,11 @@ ln: creer liens symboliques
 void mkdir(char* name,Disk* disk,Inode* current_inode){
 	Inode* inode = NULL;
 	
-	if(current_inode != NULL && search_file_in_directory(name,current_inode->dir_blocks) != NULL) {
+	/*if(current_inode != NULL && search_file_in_directory(name,current_inode->dir_blocks) != NULL) {
 		printf("Error: The file already exist in this directory \n");
 		return;
-	}
+	}*/
+	
 	inode = (Inode*)malloc(sizeof(Inode));
 	
 	strcpy(inode->name, name);
@@ -46,8 +47,6 @@ void mkdir(char* name,Disk* disk,Inode* current_inode){
 	}
 	
 	add_inode(inode,disk);
-	
-	printf("The directory %s has been created successfully ! \n",name);
 	
 }
 
@@ -98,6 +97,7 @@ void ls(Inode* current_inode) {
 				strcpy(file_type,"Directory");
 				break;
 			default:
+				strcpy(file_type," ");
 				break;
 		}
 		printf("%s -> file type : %s, rights : %s\n",current_inode->dir_blocks->tab_index[i].name, 

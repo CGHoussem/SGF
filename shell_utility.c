@@ -36,13 +36,25 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 	int nb_arg,i,cpt;
 	Inode** inodes_input;
     char** parsedInput = parse(input);
+    
     if (strcmp(input, "mkdir") == 0){
-		//TODO créer plusieurs dossier avec un seul mkdir
-		if(parsedInput[1] != NULL){
-			mkdir(parsedInput[1], disk, disk->inodes);
-		} else {
-			printf("No directory name input \n");
+		nb_arg = count_path(parsedInput);
+		if(nb_arg < 1) {
+			printf("Missing file input \n");
+			free_input(input,parsedInput);
+			return 1;
 		}
+		
+		i = 1;
+		while(parsedInput[i] != NULL) {
+			if(parsedInput[i][0] != '-') {
+				if(path_to_destination_directory(parsedInput[i],current_inode,disk) == NULL) {
+					printf("Error at argument %d, the directory was not created \n",i);
+				} 
+			}
+			i++;
+		}
+		
 		free_input(input,parsedInput);
         return 1;
     
@@ -114,7 +126,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		free_input(input,parsedInput);
         return 1;
     
-    } else if (strcmp(input, "mymv") == 0){
+    } else if (strcmp(input, "mv") == 0){
 		//TODO supprimer inode(s) source(s) ou les modifier uniquement
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 2) {
@@ -179,7 +191,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		return 1;
 
     
-    } else if (strcmp(input, "myrm") ==0){
+    } else if (strcmp(input, "rm") ==0){
 		//TODO : gérer plusieurs suppressions, vérifier la récupération de l'inode
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 1) {
@@ -219,7 +231,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
         return 1;
 
     
-    } else if (strcmp(input, "myrmdir") == 0){
+    } else if (strcmp(input, "rmdir") == 0){
 		//TODO : gérer plusieurs suppressions, vérifier la récupération de l'inode
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 1) {
@@ -259,7 +271,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
         return 1;
     
 	
-	} else if (strcmp(input, "mychmod") == 0){
+	} else if (strcmp(input, "chmod") == 0){
 		
         nb_arg = count_path(parsedInput);
         
@@ -461,37 +473,39 @@ Inode* path_to_destination(char* parsedInput,Inode* current_inode,Disk* disk){
 		}	
 	}
 	return next_inode;
+}
 
-	/*printf("path to parent inode \n");
-
-	file_name = strtok(parsedInput,"/");
-	printf("1 %s \n",file_name);
-	if(strcmp(file_name,"root") == 0){
-		inode = disk->inodes;
-		next_inode = inode;
+Inode* path_to_destination_directory(char* parsedInput,Inode* current_inode,Disk* disk){	
+	char* file_name;
+	Inode* inode = NULL;
+	Inode* next_inode = NULL;
+	Inode* inode_create = NULL;
+	int create = 0;
+	
+	if(parsedInput[0] == '/') {
+		next_inode = disk->inodes;
 	} else {
-		next_inode = search_file_in_directory(file_name,inode->dir_blocks);
+		next_inode = current_inode;
 	}
-	file_name = strtok(NULL,"/");
-	printf("2 %s \n",file_name);
-	while(file_name != NULL) {
+	
+	for(file_name = strtok(parsedInput,"/");file_name != NULL;file_name = strtok(NULL,"/")){
 		inode = next_inode;
 		next_inode = search_file_in_directory(file_name,inode->dir_blocks);
-		file_name = strtok(NULL,"/");
-		printf("3 %s \n",file_name);
-		if(next_inode == NULL && file_name != NULL) { //file doesn't exist
-			printf("Error : path doesn't exist \n");
+		if(next_inode == NULL && create == 0) {
+			mkdir(file_name,disk,inode);
+			inode_create = get_last_inode(*disk);
+			next_inode = inode_create;
+			create = 1;
+		} else if(next_inode == NULL && create == 1) {
+			printf("Error: Path doesn't exist \n");
+			free_inode(disk,inode_create);
 			return NULL;
-		}
+		}	
 	}
-	if(next_inode == NULL) {
-		next_inode = mycreate(
-		printf("inode: %p \n",inode);
-		return inode;
-	} else {
-		printf("inode: %p \n",next_inode);
-		return next_inode;
-	}*/
+	if(create == 0) {
+		printf("Error: The file already exist in this directory \n");
+	}
+	return next_inode;
 }
 
 int count_path(char** parsedInput) {

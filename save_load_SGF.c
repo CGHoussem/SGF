@@ -105,7 +105,7 @@ Index* allocation_index(int size){
 	return index;
 }
 
-void init_permissions(char permissions[9]){
+void init_permissions(char permissions[10]){
 	permissions[0]='r';
 	permissions[1]='w';
 	permissions[2]='x';
@@ -115,9 +115,10 @@ void init_permissions(char permissions[9]){
 	permissions[6]='r';
 	permissions[7]='-';
 	permissions[8]='-';
+	permissions[9]='\0';
 }
 
-void delete_permissions(char permissions[9]){
+void delete_permissions(char permissions[10]){
 	permissions[0]='-';
 	permissions[1]='-';
 	permissions[2]='-';

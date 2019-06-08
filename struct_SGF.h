@@ -39,7 +39,7 @@ struct Data_block {
 
 struct Inode {
 	char name[MAX_FILE_NAME];
-	char permissions[9]; // rwxr--r--
+	char permissions[10]; // rwxr--r--
 	int type; // 1 = text, 2 = binary, 3 = directory
 	time_t date_creation;
 	time_t date_modification;
