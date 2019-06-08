@@ -34,7 +34,8 @@ char** parse(char* input){
 
 int executeLine(Disk* disk, char* input,Inode* current_inode){
 	int nb_arg,i,cpt;
-	Inode** inodes_input;
+	Inode** inodes_input = NULL;
+	Inode* inode = NULL;
     char** parsedInput = parse(input);
     
     if (strcmp(input, "mkdir") == 0){
@@ -64,12 +65,26 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
         return 1;
     
     } else if (strcmp(input, "touch") == 0){
-		//TODO gérer plusieurs fichiers + modification heure de modification
-		if(parsedInput[1] != NULL){
-			mycreate(parsedInput[1], disk, disk->inodes);
-		} else {
-			printf("No file name input \n");
+		nb_arg = count_path(parsedInput);
+		if(nb_arg < 1) {
+			printf("Missing file input \n");
+			free_input(input,parsedInput);
+			return 1;
 		}
+		
+		i = 1;
+		while(parsedInput[i] != NULL) {
+			if(parsedInput[i][0] != '-') {
+				inode = path_to_destination(parsedInput[i],current_inode,disk);
+				if(inode == NULL) {
+					printf("Error at argument %d \n",i);
+				} else {
+					inode->date_modification = time(NULL);
+				}
+			}
+			i++;
+		}
+		
 		free_input(input,parsedInput);
         return 1;
     
@@ -468,6 +483,7 @@ Inode* path_to_destination(char* parsedInput,Inode* current_inode,Disk* disk){
 			create = 1;
 		} else if(next_inode == NULL && create == 1) {
 			printf("Error: Destination path doesn't exist \n");
+			remove_tab_index(inode_create,disk);
 			free_inode(disk,inode_create);
 			return NULL;
 		}	
@@ -498,6 +514,7 @@ Inode* path_to_destination_directory(char* parsedInput,Inode* current_inode,Disk
 			create = 1;
 		} else if(next_inode == NULL && create == 1) {
 			printf("Error: Path doesn't exist \n");
+			remove_tab_index(inode_create,disk);
 			free_inode(disk,inode_create);
 			return NULL;
 		}	
