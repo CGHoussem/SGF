@@ -159,17 +159,14 @@ void cp(Inode** inodes,int number,Disk* disk){
 	}		
 }
 
-void cd (char *name,Inode *current_inode, Disk* disk){	
-	Directory_block* directory;
-	directory= current_inode->dir_blocks;
-	if (search_file_in_directory(name,directory))
+void cd (Inode *inode,Inode *current_inode){	
+	if (inode!=NULL)
 	{
-		current_inode = search_file_in_directory(name,directory);
-		disk->inodes=current_inode;
+		current_inode = inode;
 	}
 	else 
 	{
-		printf("This file %s doesn't exist\n",name);
+		printf("This file doesn't exist\n");
 	}
 }
 
