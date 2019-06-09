@@ -12,7 +12,6 @@
 cat : pour concaténer des fichiers (peut display mais aussi rediriger)
 ln : pour créer un lien symbolique entre deux fichiers
 echo “texte” > file : pour écrire dans un fichier
-ln: creer liens symboliques
 */
 //TODO vérifier que le disque ne soit pas complet avant d'ajouter
 
@@ -29,7 +28,7 @@ void mkdir(char* name,Disk* disk,Inode* current_inode){
 	inode->date_modification=time(NULL);
 	
 	inode->data_blocks = NULL;
-	inode->dir_blocks = allocation_tab_block_directory(1);
+	inode->dir_blocks = allocation_tab_block_directory();
 	inode->nb_dir_blocks++;
 	inode->nb_data_blocks = 0;
 
@@ -59,40 +58,49 @@ void mycreate(char* name,Disk* disk,Inode* current_inode){
 	inode->date_creation=time(NULL);
 	inode->date_modification=time(NULL);
 	
+	//inode->nb_data_blocks = 1;
 	inode->data_blocks = allocation_tab_block_data(1);
+
+	inode->nb_data_blocks = 1;
 	inode->dir_blocks = NULL;
 
 	inode->next_inode = NULL;
 	
-	init_block_data(inode->data_blocks,disk);
+	init_block_data(inode->data_blocks[inode->nb_data_blocks-1],disk);
 	update_tab_index(current_inode,inode);
 		
 	add_inode(inode,disk);
 	
 }
 
-void ls(Inode* current_inode) {
-	int number = current_inode->dir_blocks->nb_index;
+void ls(Inode* current_inode,char* name_index) {
 	char file_type[MAX_FILE_NAME];
+	char* file_name;
 	
-	for(int i=0;i<number;i++) {
-		switch(current_inode->dir_blocks->tab_index[i].inode->type) { //file type
-			case TEXT:
-				strcpy(file_type,"Text");
-				break;
-			case BINARY:
-				strcpy(file_type,"Binary");
-				break;
-			case DIRECTORY:
-				strcpy(file_type,"Directory");
-				break;
-			default:
-				strcpy(file_type," ");
-				break;
-		}
-		printf("%s -> file type : %s, rights : %s\n",current_inode->dir_blocks->tab_index[i].name, 
-		file_type, current_inode->dir_blocks->tab_index[i].inode->permissions);
+	
+	if(name_index == NULL) {
+		file_name = current_inode->name;
+	} else {
+		file_name = name_index;
 	}
+	
+	switch(current_inode->type) { //file type
+		case TEXT:
+			strcpy(file_type,"Text");
+			break;
+		case BINARY:
+			strcpy(file_type,"Binary");
+			break;
+		case DIRECTORY:
+			strcpy(file_type,"Directory");
+			break;
+		default:
+			strcpy(file_type," ");
+			break;
+	}
+	printf("%s -> file type : %s, rights : %s\n",file_name, 
+	file_type, current_inode->permissions);
+
 }
 
 void cp(Inode** inodes,int number,Disk* disk){
@@ -118,89 +126,79 @@ void cp(Inode** inodes,int number,Disk* disk){
 			dest->permissions[i] = source->permissions[i];
 		}
 		dest-> date_modification = time(NULL);
-		
-		if(dest->data_blocks->size != 0) {
-			for(j=0;j<dest->data_blocks->size;j++){ //delete the old data
-				dest->data_blocks->data[i] = 0;
+				
+		for(i=0;i<dest->nb_data_blocks;i++) {	
+			if(dest->data_blocks[i]->size != 0) {
+				for(j=0;j<dest->data_blocks[i]->size;j++){ //delete the old data
+					dest->data_blocks[i]->data[j] = 0;
+				}
 			}
 		}
 		
-		dest->data_blocks->size = source->data_blocks->size;
-		for(j=0;j<dest->data_blocks->size;j++){ //write the new data
-			dest->data_blocks->data[i] = source->data_blocks->data[i];
+		if(source->nb_data_blocks > 1) { // source file has more data blocks than the destination
+			dest->nb_data_blocks = source->nb_data_blocks;
+			int* reallocation = realloc(dest->data_blocks, dest->nb_data_blocks); 
+			if (reallocation == NULL) { // the realloc hasn't work
+				printf("Error while creating the new file.\n");
+				remove_tab_index(dest,disk);
+				free_inode(disk,dest);
+				return;
+			}
+			for(i=0;i<dest->nb_data_blocks;i++) {
+				dest->data_blocks[i] = source->data_blocks[i];
+			}
+		}
+		
+		for(i=0;i<dest->nb_data_blocks;i++) {
+			dest->data_blocks[i]->size = source->data_blocks[i]->size;
+			strcpy(dest->data_blocks[i]->data, source->data_blocks[i]->data);
+			/*for(j=0;j<dest->data_blocks[j]->size;j++) { //write the new data
+				dest->data_blocks[i]->data = source->data_blocks[i]->data[j];
+			}*/
 		}
 	}		
 }
 
-void cd (char *name,Inode *current_inode, Disk* disk){	
-	Directory_block* directory;
-	directory= current_inode->dir_blocks;
-	if (search_file_in_directory(name,directory))
-	{
-		current_inode = search_file_in_directory(name,directory);
-		disk->inodes=current_inode;
-	}
-	else 
-	{
-		printf("This file %s doesn't exist\n",name);
-	}
+void cd (Inode *inode,Inode **current_inode){
+	*current_inode = inode;
 }
 
 void mymv(Inode** inodes,int number,Disk* disk){
     
-    int i,j;
-	Inode* source = NULL;
-	Inode* dest = NULL;
+    int i;
+	//Inode* source = NULL;
+	//Inode* dest = NULL;
 	
-	for(i=0;i<number-2;i++) {
-		source = inodes[i];
-		
-		if((inodes[number-1])->type == DIRECTORY){ //search destination
-			dest = search_file_in_directory(source->name,(inodes[number-1])->dir_blocks);
-			if(dest == NULL) { //file doesn't exist
-				mycreate(source->name,disk,inodes[number-1]);
-				dest = get_last_inode(*disk);
-			}
-		} else {
-			dest = inodes[number-1];
-		}
-		
-		//delete the old inode (which corresponds to the old location)
-		remove_tab_index(source,disk);
-		free_inode(disk,source);
-
-		//copy the inode's informations
-		for(j=0;j<9;j++){
-			dest->permissions[i] = source->permissions[i];
-		}
-		dest-> date_modification = time(NULL);
-		
-		if(dest->data_blocks->size != 0) {
-			for(j=0;j<dest->data_blocks->size;j++){ //delete the old data
-				dest->data_blocks->data[i] = 0;
-			}
-		}
-		
-		dest->data_blocks->size = source->data_blocks->size;
-		for(j=0;j<dest->data_blocks->size;j++){ //write the new data
-			dest->data_blocks->data[i] = source->data_blocks->data[i];
-		}
+	cp(inodes,number,disk);
+	for(i=0;i<number-1;i++) {
+		myrm(inodes[i],disk);
 	}
 }
 
-void myrm(Inode** inodes,int number,Disk* disk){
-	int i;
-	printf("%d fichiers à supprimer\n", number);
-	for(i=0;i<number;i++) {
-		printf("%s\n", inodes[i]->name);
-		if(inodes[i] != NULL) { //file does exist
-			remove_tab_index(inodes[i],disk);
-			free_inode(disk,inodes[i]);
-		}
-		else { //file doesn't exist
-			printf("The file %s doesn't exist here ! \n", inodes[i]->name);
-		}
-	}		
+void myrm(Inode* inode,Disk* disk){
+	remove_tab_index(inode,disk);
+	free_inode(disk,inode);
+	
+}
+
+void myread(Inode* inode) {
+	printf("%s\n", inode->data_blocks[inode->nb_data_blocks-1]->data);
+}
+
+void mywrite(Inode* inode,char output[BUFFER_SIZE],Disk* disk) {
+	
+	int id_last_tab = inode->nb_data_blocks-1;
+	int size = inode->data_blocks[id_last_tab]->size;
+	int available = BUFFER_SIZE-size;
+	
+	if(available >= strlen(output)) {
+		strcat(inode->data_blocks[id_last_tab]->data, output);
+		printf("\n au passage, contenu du fichier : \n");
+		myread(inode);
+	}
+	else { //we have to create another
+		printf("\nError : not enough space available\n");
+	}	
 }
 
 void myrmdir(Inode** inodes,int number,Disk* disk){
@@ -247,4 +245,44 @@ void df(Disk* disk) {
 	printf("Nombre de blocs de données utilisés : %d\n", disk->nb_data_blocks);
 	printf("Nombre de blocs de répertoires utilisés : %d\n", disk->nb_dir_blocks);
 	printf("Taille de l'espace disponible :  %d octets\n\n", available);
+}
+
+
+
+void ln(Inode** inodes,Inode* current_inode,int nb_arg, Disk* disk){
+	int i;
+	
+	if (nb_arg == 1){ //add in the current directory an index associated with this inode without changing the name of the file.
+		update_tab_index(current_inode,inodes[0]);
+	} else if (inodes[nb_arg-1] != NULL && inodes[nb_arg-1]->type == DIRECTORY) {
+		for(i=0;i<nb_arg-1;i++) {
+			if(inodes[i] == NULL) {
+				printf("Error : argument %d doesn't exist \n",i+1);
+			} else if(inodes[i]->type == DIRECTORY) {
+				printf("Error : argument %d is a directory \n",i+1);
+			} else {
+				update_tab_index(inodes[nb_arg-1],inodes[i]);
+			}
+		}
+	} else if (nb_arg == 2 && inodes[nb_arg-1] != NULL && inodes[nb_arg-1]->type != DIRECTORY) {
+		printf("Impossible to link, the argument 2 already exist \n");
+	} 
+		
+	
+	
+	
+	/*else if(nbr_inode==2){ //create a symbolic link (once again, an index) of the first inode given, and will give the name of the second one to the created index.
+		update_tab_index(current_inode,inode[0]);
+		Inode* tmp=inode[0];
+		inode[1]=tmp;
+		
+		update_tab_index(current_inode,inode[1]);
+	}
+	else{ //add to the directory block the index of each file in the array (except the directory) and without changing the name.
+		//inode->dir_blocks->tab_index[i]
+		for (int i=0;i<nbr_inode;i++){
+		
+			update_tab_index(current_inode, inode[i]);
+		}
+	}*/
 }
