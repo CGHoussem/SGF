@@ -143,9 +143,10 @@ void cp(Inode** inodes,int number,Disk* disk){
 		
 		for(i=0;i<dest->nb_data_blocks;i++) {
 			dest->data_blocks[i]->size = source->data_blocks[i]->size;
-			for(j=0;j<dest->data_blocks[j]->size;j++) { //write the new data
-				dest->data_blocks[i]->data[j] = source->data_blocks[i]->data[j];
-			}
+			strcpy(dest->data_blocks[i]->data, source->data_blocks[i]->data);
+			/*for(j=0;j<dest->data_blocks[j]->size;j++) { //write the new data
+				dest->data_blocks[i]->data = source->data_blocks[i]->data[j];
+			}*/
 		}
 	}		
 }
