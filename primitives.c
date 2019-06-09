@@ -30,6 +30,8 @@ void mkdir(char* name,Disk* disk,Inode* current_inode){
 	
 	inode->data_blocks = NULL;
 	inode->dir_blocks = allocation_tab_block_directory(1);
+	inode->nb_dir_blocks++;
+	inode->nb_data_blocks = 0;
 
 	inode->next_inode = NULL;
 	

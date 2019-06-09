@@ -37,8 +37,22 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 	Inode** inodes_input = NULL;
 	Inode* inode = NULL;
     char** parsedInput = parse(input);
-    
-    if (strcmp(input, "mkdir") == 0){
+
+	if (strcmp(input, "debug") == 0) { // testing purposes
+		printf("inodes\tdirblocks\tdatablocks\n");
+		printf("%d \t%d \t\t%d\n", disk->nb_inode, disk->nb_dir_blocks, disk->nb_data_blocks);
+		printf("i1 nb dirblocks\ti1 nb datablocks\n");
+		printf("%d \t\t%d\n", disk->inodes[0].nb_dir_blocks, disk->inodes[0].nb_data_blocks);
+		/*printf("i1d1 nbindex\n");
+		printf("%d\n", disk->inodes[0].dir_blocks[0].nb_index);
+		printf("i1d1 indexname\n");
+		printf("%s\n", disk->inodes[0].dir_blocks[0].tab_index[0].name);
+		printf("dirblocks1 nbindex\n");
+		printf("%d\n", disk->dir_blocks[0].nb_index);
+		printf("dirblocks1 index1 indexname\n");
+		printf("%s\n", disk->dir_blocks[0].tab_index[0].name);*/
+		return 1;
+	} else if (strcmp(input, "mkdir") == 0){
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 1) {
 			printf("Missing file input \n");
@@ -542,3 +556,4 @@ void free_input(char* input,char** parsedInput) {
 	free(input);
 	free(parsedInput);
 }
+

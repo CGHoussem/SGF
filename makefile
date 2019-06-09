@@ -23,4 +23,4 @@ shell_utility.o: shell_utility.c shell_utility.h
 	$(CC) $(CFLAGS) -c -o shell_utility.o shell_utility.c
 
 clean:
-	rm -f $(OBJS) program
+	rm -f $(OBJS) program *.tmp *.dat
