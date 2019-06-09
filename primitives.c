@@ -145,43 +145,13 @@ void cd (char *name,Inode *current_inode, Disk* disk){
 
 void mymv(Inode** inodes,int number,Disk* disk){
     
-    int i,j;
-	Inode* source = NULL;
-	Inode* dest = NULL;
+    int i;
+	//Inode* source = NULL;
+	//Inode* dest = NULL;
 	
-	for(i=0;i<number-2;i++) {
-		source = inodes[i];
-		
-		if((inodes[number-1])->type == DIRECTORY){ //search destination
-			dest = search_file_in_directory(source->name,(inodes[number-1])->dir_blocks);
-			if(dest == NULL) { //file doesn't exist
-				mycreate(source->name,disk,inodes[number-1]);
-				dest = get_last_inode(*disk);
-			}
-		} else {
-			dest = inodes[number-1];
-		}
-		
-		//delete the old inode (which corresponds to the old location)
-		remove_tab_index(source,disk);
-		free_inode(disk,source);
-
-		//copy the inode's informations
-		for(j=0;j<9;j++){
-			dest->permissions[i] = source->permissions[i];
-		}
-		dest-> date_modification = time(NULL);
-		
-		if(dest->data_blocks->size != 0) {
-			for(j=0;j<dest->data_blocks->size;j++){ //delete the old data
-				dest->data_blocks->data[i] = 0;
-			}
-		}
-		
-		dest->data_blocks->size = source->data_blocks->size;
-		for(j=0;j<dest->data_blocks->size;j++){ //write the new data
-			dest->data_blocks->data[i] = source->data_blocks->data[i];
-		}
+	cp(inodes,number,disk);
+	for(i=0;i<number-1;i++) {
+		myrm(inodes[i],disk);
 	}
 }
 
@@ -255,3 +225,28 @@ void df(Disk* disk) {
 	printf("Nombre de blocs de répertoires utilisés : %d\n", disk->nb_dir_blocks);
 	printf("Taille de l'espace disponible :  %d octets\n\n", available);
 }
+
+/* 
+
+void ln(Inode** inode, Inode* current_inode,Disk* disk){
+	int nbr_inode=sizeof*inode;
+	
+	if (nbr_inode==1){ //add in the current directory an index associated with this inode without changing the name of the file.
+			
+		update_tab_index(current_inode,*inode);
+	}
+	else if(nbr_inode==2){ //create a symbolic link (once again, an index) of the first inode given, and will give the name of the second one to the created index.
+		update_tab_index(current_inode,inode[0]);
+		Inode* tmp=inode[0];
+		inode[1]=tmp;
+		
+		update_tab_index(current_inode,inode[1]);
+	}
+	else{ //add to the directory block the index of each file in the array (except the directory) and without changing the name.
+		//inode->dir_blocks->tab_index[i]
+		for (int i=0;i<nbr_inode;i++){
+		
+			update_tab_index(current_inode, inode[i]);
+		}
+	}
+}*/
