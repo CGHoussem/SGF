@@ -9,14 +9,12 @@
 
 int main(int argc, char** argv){
 	int running = 1;
-    char* name = NULL;
 	Disk disk;
-	Inode* current_inode;
+	Inode* current_inode = NULL;
 	
 	
 	format_disk(&disk);
 	printf("Disk root name is: %s\n", disk.inodes->name);
-    name=disk.inodes->name;
     current_inode = disk.inodes;
 		
 	/*if (load_disk(&disk) == 0){
@@ -29,9 +27,9 @@ int main(int argc, char** argv){
 		
 	// Line-Command Interpreter
 	while (running){
-        printf("$FMSshell:~%s>", name);
+        printf("$FMSshell:~%s>", current_inode->name);
         char* input = readline();
-        running = executeLine(&disk, input, current_inode);
+        running = executeLine(&disk, input, &current_inode);
     }
 
 	/*if (save_disk(disk) == 0) {

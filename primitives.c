@@ -159,15 +159,8 @@ void cp(Inode** inodes,int number,Disk* disk){
 	}		
 }
 
-void cd (Inode *inode,Inode *current_inode){	
-	if (inode!=NULL)
-	{
-		current_inode = inode;
-	}
-	else 
-	{
-		printf("This file doesn't exist\n");
-	}
+void cd (Inode *inode,Inode **current_inode){
+	*current_inode = inode;
 }
 
 void mymv(Inode** inodes,int number,Disk* disk){

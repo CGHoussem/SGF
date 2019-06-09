@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-//#include <unistd.h>
 #include "command_shell.h"
 #include "primitives.h"
 #include "save_load_SGF.h"
@@ -31,7 +30,7 @@ char** parse(char* input){
     return args;
 }
 
-int executeLine(Disk* disk, char* input,Inode* current_inode){
+int executeLine(Disk* disk, char* input,Inode** current_inode){
 	int nb_arg,i,j,cpt;
 	Inode** inodes_input = NULL;
 	Inode* inode = NULL;
@@ -48,7 +47,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		i = 1;
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
-				if(path_to_destination_directory(parsedInput[i],current_inode,disk) == NULL) {
+				if(path_to_destination_directory(parsedInput[i],*current_inode,disk) == NULL) {
 					printf("Error at argument %d, the directory was not created \n",i);
 				} 
 			}
@@ -61,8 +60,8 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
     } else if (strcmp(input, "ls") == 0){
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 1) {
-			for(j=0;j<current_inode->dir_blocks->nb_index;j++) {
-				ls(current_inode->dir_blocks->tab_index[j].inode,current_inode->dir_blocks->tab_index[j].name);
+			for(j=0;j<(*current_inode)->dir_blocks->nb_index;j++) {
+				ls((*current_inode)->dir_blocks->tab_index[j].inode,(*current_inode)->dir_blocks->tab_index[j].name);
 			}
 			free_input(input,parsedInput);
 			return 1;
@@ -71,7 +70,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		i = 1;
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
-				inode = path_to_inode(parsedInput[i],current_inode,disk);
+				inode = path_to_inode(parsedInput[i],*current_inode,disk);
 				if(inode == NULL) {
 					printf("Error at argument %d : path doesn't exist \n",i);
 				} else if(inode->type != DIRECTORY) {
@@ -99,7 +98,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		i = 1;
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
-				inode = path_to_destination(parsedInput[i],current_inode,disk);
+				inode = path_to_destination(parsedInput[i],*current_inode,disk);
 				if(inode == NULL) {
 					printf("Error at argument %d \n",i);
 				} else {
@@ -128,7 +127,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
 				if(cpt == nb_arg-1) { //destination file
-					inodes_input[cpt] = path_to_destination(parsedInput[i],current_inode,disk);
+					inodes_input[cpt] = path_to_destination(parsedInput[i],*current_inode,disk);
 					if(inodes_input[cpt] == NULL) { //destination file doesn't exist
 						free(inodes_input);
 						free_input(input,parsedInput);
@@ -143,7 +142,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 						return 1;
 					}
 				} else { //source file
-					inodes_input[cpt] = path_to_inode(parsedInput[i],current_inode,disk);
+					inodes_input[cpt] = path_to_inode(parsedInput[i],*current_inode,disk);
 					if(inodes_input[cpt] == NULL) {
 						printf("Error: argument %d is not an existing file \n",(cpt+1));
 						free_input(input,parsedInput);
@@ -182,7 +181,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
 				if(cpt == nb_arg-1) { //destination file
-					inodes_input[cpt] = path_to_destination(parsedInput[i],current_inode,disk);
+					inodes_input[cpt] = path_to_destination(parsedInput[i],*current_inode,disk);
 					if(inodes_input[cpt] == NULL) { //destination file doesn't exist
 						free(inodes_input);
 						free_input(input,parsedInput);
@@ -197,7 +196,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 						return 1;
 					} 
 				} else { //source file
-					inodes_input[cpt] = path_to_inode(parsedInput[i],current_inode,disk);
+					inodes_input[cpt] = path_to_inode(parsedInput[i],*current_inode,disk);
 					if(inodes_input[cpt] == NULL) {
 						printf("Error: argument %d is not an existing file \n",(cpt+1));
 						free_input(input,parsedInput);
@@ -221,10 +220,18 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
         return 1;
  
     
-    } else if (strcmp(input, "cd") ==0){
+    } else if (strcmp(input, "cd") == 0){
 		//TODO gérer cd hors du dossier courant
 		if(parsedInput[1] != NULL){
-			cd(parsedInput[1], current_inode,disk);
+			inode = path_to_inode(parsedInput[1],*current_inode,disk);
+			if(inode != NULL) {
+				cd(inode, current_inode);
+				//*current_inode = inode;
+			} else {
+				printf("Error : path doesnt exist \n");
+			}
+		} else {
+			printf("Missing input \n");
 		}
 		free_input(input,parsedInput);
 		return 1;
@@ -242,7 +249,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
-				inode = path_to_inode(parsedInput[i],current_inode,disk);
+				inode = path_to_inode(parsedInput[i],*current_inode,disk);
 				if(inode == NULL) {
 					printf("Error: argument %d is not an existing file \n",i);
 				} 
@@ -272,7 +279,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
-				inode = path_to_inode(parsedInput[i],current_inode,disk);
+				inode = path_to_inode(parsedInput[i],*current_inode,disk);
 				if(inode == NULL) {
 					printf("Error: argument %d is not an existing directory \n",i);
 				} 
@@ -326,7 +333,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		// case of a simple output in the shell
 		if(!hasRedirection) {
 			for(i=1;i<=nb_arg;i++) {
-				inode = path_to_inode(parsedInput[i],current_inode,disk);
+				inode = path_to_inode(parsedInput[i],*current_inode,disk);
 				if(inode == NULL) {
 					printf("Error: argument %d is not an existing file \n",i);
 				} 
@@ -491,7 +498,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		
 		printf("\nstring to redirect : \n%s\n", output);
 		
-		inode = path_to_inode(parsedInput[redirectionIndex+1],current_inode,disk);
+		inode = path_to_inode(parsedInput[redirectionIndex+1],*current_inode,disk);
 		if(inode == NULL) {
 			printf("Error: argument %d is not an existing file \n",redirectionIndex+1);
 		} 
@@ -553,7 +560,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
-				inodes_input[cpt] = path_to_inode(parsedInput[i],current_inode,disk);
+				inodes_input[cpt] = path_to_inode(parsedInput[i],*current_inode,disk);
 				if(inodes_input[cpt] == NULL) {
 					printf("Error: argument %d is not an existing file/directory \n",(cpt+2));
 					free_input(input,parsedInput);
@@ -602,16 +609,16 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
 				if(nb_arg > 1 && cpt == nb_arg-1) {
-					inodes_input[cpt] = path_to_last_directory(parsedInput[i],current_inode,disk);
+					inodes_input[cpt] = path_to_last_directory(parsedInput[i],*current_inode,disk);
 				} else {
-					inodes_input[cpt] = path_to_inode(parsedInput[i],current_inode,disk);
+					inodes_input[cpt] = path_to_inode(parsedInput[i],*current_inode,disk);
 				}
 				cpt++;
 			}
 			i++;
 		}
 		
-		ln(inodes_input,current_inode,nb_arg,disk);
+		ln(inodes_input,*current_inode,nb_arg,disk);
 		
 		free(inodes_input);
 		free_input(input,parsedInput);

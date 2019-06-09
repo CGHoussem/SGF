@@ -6,7 +6,7 @@
 
 char* readline();
 char** parse(char* input);
-int executeLine(Disk* disk, char* input,Inode* current_inode);
+int executeLine(Disk* disk, char* input,Inode** current_inode);
 //return the inode associated with the given path, NULL if the path doesn't exist
 Inode* path_to_inode(char* parsedInput,Inode* current_inode,Disk* disk); 
 //return the inode associated with the given path 
