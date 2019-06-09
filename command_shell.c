@@ -32,7 +32,7 @@ char** parse(char* input){
 }
 
 int executeLine(Disk* disk, char* input,Inode* current_inode){
-	int nb_arg,i,cpt;
+	int nb_arg,i,j,cpt;
 	Inode** inodes_input = NULL;
 	Inode* inode = NULL;
     char** parsedInput = parse(input);
@@ -59,9 +59,32 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
         return 1;
     
     } else if (strcmp(input, "ls") == 0){
-        ls(current_inode);
-        free_input(input,parsedInput);
-        return 1;
+		nb_arg = count_path(parsedInput);
+		if(nb_arg < 1) {
+			ls(current_inode,NULL);
+			free_input(input,parsedInput);
+			return 1;
+		}
+		
+		i = 1;
+		while(parsedInput[i] != NULL) {
+			if(parsedInput[i][0] != '-') {
+				inode = path_to_inode(parsedInput[i],current_inode,disk);
+				if(inode == NULL) {
+					printf("Error at argument %d : path doesn't exist \n",i);
+				} else if(inode->type != DIRECTORY) {
+					ls(inode,NULL);
+				} else {
+					printf("%s : \n",inode->name);
+					for(j=0;j<inode->dir_blocks->nb_index;j++) {
+						ls(inode->dir_blocks->tab_index[j].inode,inode->dir_blocks->tab_index[j].name);
+					}
+				}
+			}
+			i++;
+		}
+		free_input(input,parsedInput);
+		return 1;
     
     } else if (strcmp(input, "touch") == 0){
 		nb_arg = count_path(parsedInput);

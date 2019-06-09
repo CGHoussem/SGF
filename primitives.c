@@ -73,28 +73,34 @@ void mycreate(char* name,Disk* disk,Inode* current_inode){
 	
 }
 
-void ls(Inode* current_inode) {
-	int number = current_inode->dir_blocks->nb_index;
+void ls(Inode* current_inode,char* name_index) {
 	char file_type[MAX_FILE_NAME];
+	char* file_name;
 	
-	for(int i=0;i<number;i++) {
-		switch(current_inode->dir_blocks->tab_index[i].inode->type) { //file type
-			case TEXT:
-				strcpy(file_type,"Text");
-				break;
-			case BINARY:
-				strcpy(file_type,"Binary");
-				break;
-			case DIRECTORY:
-				strcpy(file_type,"Directory");
-				break;
-			default:
-				strcpy(file_type," ");
-				break;
-		}
-		printf("%s -> file type : %s, rights : %s\n",current_inode->dir_blocks->tab_index[i].name, 
-		file_type, current_inode->dir_blocks->tab_index[i].inode->permissions);
+	
+	if(name_index == NULL) {
+		file_name = current_inode->name;
+	} else {
+		file_name = name_index;
 	}
+	
+	switch(current_inode->type) { //file type
+		case TEXT:
+			strcpy(file_type,"Text");
+			break;
+		case BINARY:
+			strcpy(file_type,"Binary");
+			break;
+		case DIRECTORY:
+			strcpy(file_type,"Directory");
+			break;
+		default:
+			strcpy(file_type," ");
+			break;
+	}
+	printf("%s -> file type : %s, rights : %s\n",file_name, 
+	file_type, current_inode->permissions);
+
 }
 
 void cp(Inode** inodes,int number,Disk* disk){
