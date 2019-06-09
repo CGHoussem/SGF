@@ -586,6 +586,36 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		df(disk);
 		
 		return 1;
+		
+	} else if (strcmp(input, "ln") == 0){
+		nb_arg = count_path(parsedInput);
+		if(nb_arg < 1) {
+			printf("Error: Missing file input \n");
+			free_input(input,parsedInput);
+			return 1;
+		}
+
+		inodes_input = (Inode**) malloc(nb_arg * sizeof(Inode*));
+		
+		i = 1;
+		cpt = 0;
+		while(parsedInput[i] != NULL) {
+			if(parsedInput[i][0] != '-') {
+				if(nb_arg > 1 && cpt == nb_arg-1) {
+					inodes_input[cpt] = path_to_last_directory(parsedInput[i],current_inode,disk);
+				} else {
+					inodes_input[cpt] = path_to_inode(parsedInput[i],current_inode,disk);
+				}
+				cpt++;
+			}
+			i++;
+		}
+		
+		ln(inodes_input,current_inode,nb_arg,disk);
+		
+		free(inodes_input);
+		free_input(input,parsedInput);
+        return 1;
     
     } else if (strcmp(input, "help") == 0){
         printf("Available commands: mkdir, touch, ls, cp, mv, rm, exit\n");
@@ -742,6 +772,36 @@ Inode* path_to_destination_directory(char* parsedInput,Inode* current_inode,Disk
 	}
 	return next_inode;
 }
+
+Inode* path_to_last_directory(char* parsedInput,Inode* current_inode,Disk* disk){	
+	char* file_name;
+	Inode* inode = NULL;
+	Inode* next_inode = NULL;
+	int not_found = 0;
+	
+	if(parsedInput[0] == '/') {
+		next_inode = disk->inodes;
+	} else {
+		next_inode = current_inode;
+	}
+	
+	for(file_name = strtok(parsedInput,"/");file_name != NULL;file_name = strtok(NULL,"/")){
+		inode = next_inode;
+		next_inode = search_file_in_directory(file_name,inode->dir_blocks);
+		if(next_inode == NULL && not_found == 0) {
+			not_found = 1;
+		} else if(next_inode == NULL && not_found == 1) {
+			printf("Error: Path doesn't exist \n");;
+			return NULL;
+		}	
+	}
+	if(next_inode == NULL) {
+		return inode;
+	} else {
+		return next_inode;
+	}
+}
+
 
 int count_path(char** parsedInput) {
 	int i = 1;

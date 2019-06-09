@@ -12,7 +12,7 @@ void mychmod(Inode** inodes,int number,char permissions[9],Disk* disk);
 void df(Disk* disk);
 void mywrite(Inode* inode,char output[BUFFER_SIZE],Disk* disk); // writes the ouput given in the data block(s) of the inode given
 void myread(Inode* inode); // reads the content of a file
-//void ln(Inode** inode, Inode* current_inode,Disk* disk);
+void ln(Inode** inodes,Inode* current_inode,int nb_arg, Disk* disk);
 
 
 #endif
