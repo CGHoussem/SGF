@@ -11,5 +11,7 @@ void mymv(Inode** inodes,int number,Disk* disk);
 void myrm(Inode* inode,Disk* disk);
 void mychmod(Inode** inodes,int number,char permissions[9],Disk* disk);
 void df(Disk* disk);
+void mywrite(Inode* inode,char output[BUFFER_SIZE],Disk* disk); // writes the ouput given in the data block(s) of the inode given
+void myread(Inode* inode); // reads the content of a file
 
 #endif

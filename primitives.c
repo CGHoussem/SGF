@@ -12,7 +12,6 @@
 cat : pour concaténer des fichiers (peut display mais aussi rediriger)
 ln : pour créer un lien symbolique entre deux fichiers
 echo “texte” > file : pour écrire dans un fichier
-ln: creer liens symboliques
 */
 //TODO vérifier que le disque ne soit pas complet avant d'ajouter
 
@@ -190,6 +189,25 @@ void myrm(Inode* inode,Disk* disk){
 	remove_tab_index(inode,disk);
 	free_inode(disk,inode);
 		
+}
+
+void myread(Inode* inode) {
+	printf("%s\n", inode->data_blocks->data);
+}
+
+void mywrite(Inode* inode,char output[BUFFER_SIZE],Disk* disk) {
+	
+	int taille = inode->data_blocks->size;
+	int available = BUFFER_SIZE-taille;
+	
+	if(available >= strlen(output)) {
+		strcat(inode->data_blocks->data, output);
+		printf("\n au passage, contenu du fichier : \n");
+		myread(inode);
+	}
+	else {
+		printf("\nError : not enough space available\n");
+	}	
 }
 
 void myrmdir(Inode** inodes,int number,Disk* disk){

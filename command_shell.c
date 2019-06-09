@@ -268,6 +268,112 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
         return 1;
     
 	
+	} else if (strcmp(input, "echo") == 0){
+        nb_arg = count_path(parsedInput);
+		if(nb_arg < 1) {
+			printf("Error : missing inputs \n");
+			free_input(input,parsedInput);
+			return 1;
+		}
+		
+		int i,j;
+	
+		int nb_quotes = 0;
+		for(i=1;i<=nb_arg;i++)
+			for(j=0;j<strlen(parsedInput[i]);j++)
+				nb_quotes += (parsedInput[i][j] == '"');
+		
+		// checks if quotes are opened but not closed
+		if(nb_quotes%2 != 0) {
+			printf("Error : you have entered %d quotes, 1 missing quote\n", nb_quotes);
+			free_input(input,parsedInput);
+			return 1;
+		}
+		
+		int hasRedirection = 0;
+		int redirectionIndex = 0;
+		// checks if there are redirections
+		for(i=1;i<=nb_arg;i++) {
+			if(strcmp(parsedInput[i], ">") == 0) 
+			{
+				// verifying if there's a file after the redirection
+				if(i == nb_arg) {
+					printf("Error : missing directory input \n");
+					free_input(input,parsedInput);
+					return 1;
+				}
+				redirectionIndex = i;
+				hasRedirection = 1;
+				break;
+			}
+		}
+		
+		// case of a simple output in the shell
+		if(!hasRedirection) {
+			for(i=1;i<=nb_arg;i++) {
+				for(j=0;j<strlen(parsedInput[i]);j++)
+					if(parsedInput[i][j] != '"')
+						printf("%c", parsedInput[i][j]);
+				printf(" ");
+			}
+			printf("\n");
+			free_input(input,parsedInput);
+			return 1;
+		}
+		
+		char output[BUFFER_SIZE] = "";	
+		int taille_totale;
+		// First part of the array (before the redirection char)
+		for(i=1;i<redirectionIndex;i++) {
+			for(j=0;j<strlen(parsedInput[i]);j++) {
+				taille_totale = strlen(output) + strlen(parsedInput[i]);
+				if(taille_totale <= BUFFER_SIZE) {
+					if(parsedInput[i][j] != '"')
+						output[strlen(output)] = parsedInput[i][j];
+					}
+					else {
+						printf("Error : size of the input is to high\n");
+						free_input(input,parsedInput);
+						return 1;
+					}
+			}
+			output[strlen(output)] = ' ';
+		}
+		
+		// Second part of the array (after the file which will be modified)
+		if(nb_arg > redirectionIndex+1) {
+			for(i=redirectionIndex+2;i<=nb_arg;i++) {
+				for(j=0;j<strlen(parsedInput[i]);j++) {
+					taille_totale = strlen(output) + strlen(parsedInput[i]);
+					if(taille_totale <= BUFFER_SIZE) {
+						if(parsedInput[i][j] != '"')
+							output[strlen(output)] = parsedInput[i][j];
+					}
+					else {
+						printf("Error : size of the input is to high\n");
+						free_input(input,parsedInput);
+						return 1;
+					}
+				}
+				output[strlen(output)] = ' ';
+			}
+		}
+		
+		printf("\nstring to redirect : \n%s\n", output);
+		
+		inode = path_to_inode(parsedInput[redirectionIndex+1],current_inode,disk);
+		if(inode == NULL) {
+			printf("Error: argument %d is not an existing file \n",redirectionIndex+1);
+		} 
+		else if(inode->type != TEXT) {
+			printf("Error: argument %d is not a file \n",i);
+		}
+		else {
+			mywrite(inode,output,disk);
+		}
+		free_input(input,parsedInput);
+        return 1;
+	
 	} else if (strcmp(input, "chmod") == 0){
 		
         nb_arg = count_path(parsedInput);
