@@ -44,7 +44,9 @@ struct Inode {
 	time_t date_creation;
 	time_t date_modification;
 	Directory_block* dir_blocks;
-	Data_block* data_blocks;
+	Data_block** data_blocks;
+	
+	int nb_data_blocks;
 	
 	Inode* prev_inode;
 	Inode* next_inode;

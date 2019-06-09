@@ -56,12 +56,15 @@ void mycreate(char* name,Disk* disk,Inode* current_inode){
 	inode->date_creation=time(NULL);
 	inode->date_modification=time(NULL);
 	
+	inode->nb_data_blocks = 1;
 	inode->data_blocks = allocation_tab_block_data(1);
+
+	inode->nb_data_blocks = 1;
 	inode->dir_blocks = NULL;
 
 	inode->next_inode = NULL;
 	
-	init_block_data(inode->data_blocks,disk);
+	init_block_data(inode->data_blocks[inode->nb_data_blocks-1],disk);
 	update_tab_index(current_inode,inode);
 		
 	add_inode(inode,disk);
@@ -115,16 +118,34 @@ void cp(Inode** inodes,int number,Disk* disk){
 			dest->permissions[i] = source->permissions[i];
 		}
 		dest-> date_modification = time(NULL);
-		
-		if(dest->data_blocks->size != 0) {
-			for(j=0;j<dest->data_blocks->size;j++){ //delete the old data
-				dest->data_blocks->data[i] = 0;
+				
+		for(i=0;i<dest->nb_data_blocks;i++) {	
+			if(dest->data_blocks[i]->size != 0) {
+				for(j=0;j<dest->data_blocks[i]->size;j++){ //delete the old data
+					dest->data_blocks[i]->data[j] = 0;
+				}
 			}
 		}
 		
-		dest->data_blocks->size = source->data_blocks->size;
-		for(j=0;j<dest->data_blocks->size;j++){ //write the new data
-			dest->data_blocks->data[i] = source->data_blocks->data[i];
+		if(source->nb_data_blocks > 1) { // source file has more data blocks than the destination
+			dest->nb_data_blocks = source->nb_data_blocks;
+			int* reallocation = realloc(dest->data_blocks, dest->nb_data_blocks); 
+			if (reallocation == NULL) { // the realloc hasn't work
+				printf("Error while creating the new file.\n");
+				remove_tab_index(dest,disk);
+				free_inode(disk,dest);
+				return;
+			}
+			for(i=0;i<dest->nb_data_blocks;i++) {
+				dest->data_blocks[i] = source->data_blocks[i];
+			}
+		}
+		
+		for(i=0;i<dest->nb_data_blocks;i++) {
+			dest->data_blocks[i]->size = source->data_blocks[i]->size;
+			for(j=0;j<dest->data_blocks[j]->size;j++) { //write the new data
+				dest->data_blocks[i]->data[j] = source->data_blocks[i]->data[j];
+			}
 		}
 	}		
 }
@@ -158,24 +179,25 @@ void mymv(Inode** inodes,int number,Disk* disk){
 void myrm(Inode* inode,Disk* disk){
 	remove_tab_index(inode,disk);
 	free_inode(disk,inode);
-		
+	
 }
 
 void myread(Inode* inode) {
-	printf("%s\n", inode->data_blocks->data);
+	printf("%s\n", inode->data_blocks[inode->nb_data_blocks-1]->data);
 }
 
 void mywrite(Inode* inode,char output[BUFFER_SIZE],Disk* disk) {
 	
-	int taille = inode->data_blocks->size;
-	int available = BUFFER_SIZE-taille;
+	int id_last_tab = inode->nb_data_blocks-1;
+	int size = inode->data_blocks[id_last_tab]->size;
+	int available = BUFFER_SIZE-size;
 	
 	if(available >= strlen(output)) {
-		strcat(inode->data_blocks->data, output);
+		strcat(inode->data_blocks[id_last_tab]->data, output);
 		printf("\n au passage, contenu du fichier : \n");
 		myread(inode);
 	}
-	else {
+	else { //we have to create another
 		printf("\nError : not enough space available\n");
 	}	
 }

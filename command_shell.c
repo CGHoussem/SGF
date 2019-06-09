@@ -268,6 +268,108 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
         return 1;
     
 	
+	} else if (strcmp(input, "cat") == 0){
+        nb_arg = count_path(parsedInput);
+		if(nb_arg < 1) {
+			printf("Error : missing input \n");
+			free_input(input,parsedInput);
+			return 1;
+		}
+		
+		int i,j;
+		
+		int hasRedirection = 0;
+		int redirectionIndex = 0;
+		// checks if there is redirection
+		for(i=1;i<=nb_arg;i++) {
+			if(strcmp(parsedInput[i], ">") == 0) 
+			{
+				// verifying if there's a file after the redirection
+				if(i == nb_arg) {
+					printf("Error : missing file input \n");
+					free_input(input,parsedInput);
+					return 1;
+				}
+				redirectionIndex = i;
+				hasRedirection = 1;
+				break;
+			}
+		}
+		
+		// case of a simple output in the shell
+		if(!hasRedirection) {
+			for(i=1;i<=nb_arg;i++) {
+				inode = path_to_inode(parsedInput[i],current_inode,disk);
+				if(inode == NULL) {
+					printf("Error: argument %d is not an existing file \n",i);
+				} 
+				else if(inode->type != TEXT) {
+					printf("Error: argument %d is not a file \n",i);
+				}
+				else {
+					myread(inode);
+				}
+			}
+			free_input(input,parsedInput);
+			return 1;
+		}
+		
+		/*
+		char output[BUFFER_SIZE] = "";	
+		int taille_totale;
+		
+		// First part of the array (before the redirection char)
+		for(i=1;i<redirectionIndex;i++) {
+			for(j=0;j<strlen(parsedInput[i]);j++) {
+				taille_totale = strlen(output) + strlen(parsedInput[i]);
+				if(taille_totale <= BUFFER_SIZE) {
+					if(parsedInput[i][j] != '"')
+						output[strlen(output)] = parsedInput[i][j];
+					}
+					else {
+						printf("Error : size of the input is to high\n");
+						free_input(input,parsedInput);
+						return 1;
+					}
+			}
+			output[strlen(output)] = ' ';
+		}
+		
+		// Second part of the files which will be displayed (after the file which will be modified)
+		if(nb_arg > redirectionIndex+1) {
+			for(i=redirectionIndex+2;i<=nb_arg;i++) {
+				for(j=0;j<strlen(parsedInput[i]);j++) {
+					taille_totale = strlen(output) + strlen(parsedInput[i]);
+					if(taille_totale <= BUFFER_SIZE) {
+						if(parsedInput[i][j] != '"')
+							output[strlen(output)] = parsedInput[i][j];
+					}
+					else {
+						printf("Error : size of the input is to high\n");
+						free_input(input,parsedInput);
+						return 1;
+					}
+				}
+				output[strlen(output)] = ' ';
+			}
+		}
+		
+		printf("\nstring to redirect : \n%s\n", output);
+		
+		inode = path_to_inode(parsedInput[redirectionIndex+1],current_inode,disk);
+		if(inode == NULL) {
+			printf("Error: argument %d is not an existing file \n",redirectionIndex+1);
+		} 
+		else if(inode->type != TEXT) {
+			printf("Error: argument %d is not a file \n",i);
+		}
+		else {
+			mywrite(inode,output,disk);
+		}
+		*/
+		free_input(input,parsedInput);
+        return 1;
+	
 	} else if (strcmp(input, "echo") == 0){
         nb_arg = count_path(parsedInput);
 		if(nb_arg < 1) {
@@ -278,6 +380,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		
 		int i,j;
 	
+		// counting quotes
 		int nb_quotes = 0;
 		for(i=1;i<=nb_arg;i++)
 			for(j=0;j<strlen(parsedInput[i]);j++)
@@ -298,7 +401,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			{
 				// verifying if there's a file after the redirection
 				if(i == nb_arg) {
-					printf("Error : missing directory input \n");
+					printf("Error : missing file input \n");
 					free_input(input,parsedInput);
 					return 1;
 				}
@@ -462,40 +565,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
         free_input(input,parsedInput);
         return 1;
    
-    }else if(strcmp(input,"ln")==0){
-		/* 
-		nb_arg=count_path(parsedInput);
-		
-		if(nb_arg < 1) {
-			printf("Missing files to link input \n");
-			free_input(input,parsedInput);
-			return 1;
-		}
-		
-		i = 1;
-		
-		while(parsedInput[i] != NULL) {
-			if(parsedInput[i][0] != '-') {
-				inode = path_to_inode(parsedInput[i],current_inode,disk);
-				if(inode == NULL) {
-					printf("Error: argument %d is not an existing file \n",i);
-				} 
-				else if(inode->type != (BINARY ||TEXT)) {
-					printf("Error: argument %d is not a file \n",i);
-				}
-				
-				else {
-					ln(&inode,inode,disk);
-				}
-			}
-			i++;
-		}
-		
-		free_input(input,parsedInput);
-        return 1;
-		*/
-
-	}else if (strcmp(input, "exit") == 0){
+    } else if (strcmp(input, "exit") == 0){
 		free_input(input,parsedInput);
         return 0;
     

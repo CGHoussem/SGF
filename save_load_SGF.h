@@ -22,7 +22,8 @@ Inode* search_parent_inode(Inode* inode,Disk* disk); //return the parent inode o
 // Allocations
 Index* allocation_index(int size); //dynamic allocation
 Directory_block* allocation_tab_block_directory(int size); //dynamic allocation of a directory block
-Data_block* allocation_tab_block_data(int size); // dynamic allocation of a data block
+Data_block* allocation_block_directory(); //dynamic allocation of a data block
+Data_block** allocation_tab_block_data(int size); // dynamic allocation of an array data block
 
 //Free
 void free_inode(Disk* disk,Inode* inode); //delete an inode

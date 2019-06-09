@@ -56,16 +56,26 @@ Directory_block* allocation_tab_block_directory(int size){
 	
 	tab_block=(Directory_block*) malloc(size*sizeof(Directory_block));
 	tab_block->next_block = NULL;
-
+	
 	return tab_block;
 }
 
-Data_block* allocation_tab_block_data(int size){
-	Data_block* tab_block = NULL;
+Data_block* allocation_block_data(){
+	Data_block* block = NULL;
 	
-	tab_block=(Data_block*) malloc(size*sizeof(Data_block));
-	tab_block->next_block = NULL;
+	block=(Data_block*) malloc(sizeof(Data_block));
+	block->next_block = NULL;
+		
+	return block;
+}
 
+Data_block** allocation_tab_block_data(int size){
+	Data_block** tab_block = NULL;
+	
+	tab_block=(Data_block**) malloc(size*sizeof(Data_block*));
+	
+	tab_block[0] = allocation_block_data();
+	
 	return tab_block;
 }
 
@@ -146,7 +156,9 @@ void free_inode(Disk* disk,Inode* inode){
 		free_block_directory(disk,inode->dir_blocks);
 		inode->dir_blocks = NULL;
 	} else {
-		free_block_data(disk,inode->data_blocks);
+		for(int i=0;i<inode->nb_data_blocks;i++) {
+			free_block_data(disk,inode->data_blocks[i]);
+		}
 		inode->data_blocks = NULL;
 	}
 	
@@ -331,7 +343,6 @@ void remove_tab_index(Inode* inode_to_remove,Disk* disk){
 	parent_inode->dir_blocks->nb_index--;
 
 }
-
 
 Inode* search_file_in_directory(char* file_name,Directory_block* directory) {
 	int i;
