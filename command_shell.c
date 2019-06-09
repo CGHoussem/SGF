@@ -61,7 +61,9 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
     } else if (strcmp(input, "ls") == 0){
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 1) {
-			ls(current_inode,NULL);
+			for(j=0;j<current_inode->dir_blocks->nb_index;j++) {
+				ls(current_inode->dir_blocks->tab_index[j].inode,current_inode->dir_blocks->tab_index[j].name);
+			}
 			free_input(input,parsedInput);
 			return 1;
 		}
@@ -298,6 +300,8 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			free_input(input,parsedInput);
 			return 1;
 		}
+		
+		//TODO Déclarations en haut
 		
 		int i,j;
 		
