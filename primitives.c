@@ -28,7 +28,9 @@ void mkdir(char* name,Disk* disk,Inode* current_inode){
 	inode->date_modification=time(NULL);
 	
 	inode->data_blocks = NULL;
-	inode->dir_blocks = allocation_tab_block_directory(1);
+	inode->dir_blocks = allocation_block_directory();
+	
+	inode->nb_data_blocks = 0;
 
 	inode->next_inode = NULL;
 	
@@ -56,7 +58,7 @@ void mycreate(char* name,Disk* disk,Inode* current_inode){
 	inode->date_creation=time(NULL);
 	inode->date_modification=time(NULL);
 	
-	inode->nb_data_blocks = 1;
+	//inode->nb_data_blocks = 1;
 	inode->data_blocks = allocation_tab_block_data(1);
 
 	inode->nb_data_blocks = 1;
