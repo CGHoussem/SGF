@@ -310,7 +310,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		
 		//TODO Déclarations en haut
 		
-		int i,j;
+		int i;
 		
 		int hasRedirection = 0;
 		int redirectionIndex = 0;

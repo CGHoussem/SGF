@@ -28,7 +28,7 @@ void mkdir(char* name,Disk* disk,Inode* current_inode){
 	inode->date_modification=time(NULL);
 	
 	inode->data_blocks = NULL;
-	inode->dir_blocks = allocation_tab_block_directory();
+	inode->dir_blocks = allocation_block_directory();
 	inode->nb_dir_blocks++;
 	inode->nb_data_blocks = 0;
 
