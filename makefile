@@ -20,4 +20,5 @@ command_shell.o: command_shell.c command_shell.h
 	$(CC) $(CFLAGS) -c -o command_shell.o command_shell.c
 
 clean:
-	rm -f $(OBJS) program *.tmp *.dat
+	rm -f $(OBJS) program *.dat
+	rm -r -f tmp

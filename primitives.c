@@ -20,8 +20,8 @@ void mkdir(char* name,Disk* disk,Inode* current_inode){
 	
 	inode = (Inode*)malloc(sizeof(Inode));
 	
+	inode->index = disk->nb_inode;
 	strcpy(inode->name, name);
-	
 	init_permissions(inode->permissions);
 	inode->type=DIRECTORY; 
 	inode->date_creation=time(NULL);
@@ -51,8 +51,8 @@ void mycreate(char* name,Disk* disk,Inode* current_inode){
 	
 	inode = (Inode*)malloc(sizeof(Inode));
 	
+	inode->index = disk->nb_inode;
 	strcpy(inode->name, name);
-	
 	init_permissions(inode->permissions);
 	inode->type=TEXT; 
 	inode->date_creation=time(NULL);

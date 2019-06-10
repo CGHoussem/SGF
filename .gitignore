@@ -6,5 +6,5 @@
 program
 
 # Disk files
+tmp
 *.dat
-*.tmp

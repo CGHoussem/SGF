@@ -44,15 +44,15 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		printf("DISK FIRST INODE DIR BLOCKS :\n");
 		d_print_dirblocks(disk->inodes[0].dir_blocks);
 		printf("-----------:\n");
-		printf("DISK FIRST INODE DIR BLOCKS INDEXES :\n");
-		d_print_indexes(disk->inodes[0].dir_blocks->tab_index, disk->inodes[0].dir_blocks->nb_index);
-		printf("============:\n");
-		printf("DISK DIR BLOCKS:\n");
-		d_print_dirblocks(disk->dir_blocks);
-		printf("-----------:\n");
-		printf("DISK FIRST DIR BLOCK INDEXES :\n");
-		d_print_indexes(disk->dir_blocks[0].tab_index, disk->dir_blocks[0].nb_index);
-		printf("-----------:\n");
+		//printf("DISK FIRST INODE DIR BLOCKS INDEXES :\n");
+		//d_print_indexes(disk->inodes[0].dir_blocks->tab_index, disk->inodes[0].dir_blocks->nb_index);
+		//printf("============:\n");
+		//printf("DISK DIR BLOCKS:\n");
+		//d_print_dirblocks(disk->dir_blocks);
+		//printf("-----------:\n");
+		//printf("DISK FIRST DIR BLOCK INDEXES :\n");
+		//d_print_indexes(disk->dir_blocks[0].tab_index, disk->dir_blocks[0].nb_index);
+		//printf("-----------:\n");
 		free_input(input,parsedInput);
         return 1;
 
@@ -83,7 +83,10 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 1) {
 			for(j=0;j<(*current_inode)->dir_blocks->nb_index;j++) {
-				ls((*current_inode)->dir_blocks->tab_index[j].inode,(*current_inode)->dir_blocks->tab_index[j].name);
+				ls(
+					(*current_inode)->dir_blocks->tab_index[j].inode,
+					(*current_inode)->dir_blocks->tab_index[j].name
+				);
 			}
 			free_input(input,parsedInput);
 			return 1;

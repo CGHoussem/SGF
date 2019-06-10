@@ -19,7 +19,7 @@ int save_inodes(Inode* inodes); // physcailly saves a list of inodes in a tempor
 // Load Functions
 int load_disk(Disk* disk); // loads the state of the saved disk (returns 0 if error encountered)
 int load_data_blocks(Data_block** blocks, int nb_data_blocks); // loads the data blocks
-int load_dir_blocks(Directory_block** blocks, int nb_dir_blocks); // loads the directory blocks
+int load_dir_blocks(Disk* disk, Directory_block** blocks, int nb_dir_blocks); // loads the directory blocks
 int load_inode_data_blocks(int inode_index, Data_block** blocks, int nb_data_blocks); // loads an inode's data blocks
 int load_inode_dir_blocks(Inode* inode, int inode_index, Directory_block** blocks); // loads an inode's directory blocks
 int load_inodes(Inode** inodes, int nb_inodes); // loads the saved inodes
@@ -28,9 +28,9 @@ int load_inodes(Inode** inodes, int nb_inodes); // loads the saved inodes
 void addDataBlockTail(Data_block** head, Data_block block);
 void addDirBlockTail(Directory_block** head, Directory_block block);
 void addInodeTail(Inode** head, Inode inode);
-int read_index(Inode* inode, FILE* f, Index* index);
+int read_index(Disk* disk, Inode* inode, FILE* f, Index* index);
 int read_data_block(FILE* f, Data_block* block);
-int read_dir_block(FILE* f, Directory_block* block, int dir_index);
+int read_dir_block(Disk* disk, FILE* f, Directory_block* block, int dir_index);
 int read_inode_dir_block(Inode* inode, FILE* f, Directory_block* block, int inode_index, int dir_index);
 int read_inode(FILE* f, int inode_index, Inode* inode);
 
