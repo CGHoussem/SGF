@@ -184,7 +184,6 @@ void myrm(Inode* inode,Disk* disk){
 
 char* myread(Inode* inode, char* output) {
 	int i;
-	printf("data : %s\n", inode->data_blocks[0]->data);
 	for(i=0;i<inode->nb_data_blocks;i++) {
 		strcat(output, inode->data_blocks[i]->data);
 	}
