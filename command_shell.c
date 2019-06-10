@@ -287,6 +287,9 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 				else if(inode->dir_blocks->nb_index > 2) {
 					printf("Error: argument %d is not an empty directory \n",i+1);
 				}
+				else if(inode == *current_inode) {
+					printf("Error: cannot delete the current directory \n");
+				}
 				else {
 					myrm(inode,disk);
 				}
