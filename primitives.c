@@ -105,7 +105,7 @@ void ls(Inode* current_inode,char* name_index) {
 }
 
 void cp(Inode** inodes,int number,Disk* disk){
-	int i,j;
+	int i,j,k;
 	Inode* source = NULL;
 	Inode* dest = NULL;
 	
@@ -128,10 +128,10 @@ void cp(Inode** inodes,int number,Disk* disk){
 		}
 		dest-> date_modification = time(NULL);
 				
-		for(i=0;i<dest->nb_data_blocks;i++) {	
+		for(j=0;i<dest->nb_data_blocks;i++) {	
 			if(dest->data_blocks[i]->size != 0) {
-				for(j=0;j<dest->data_blocks[i]->size;j++){ //delete the old data
-					dest->data_blocks[i]->data[j] = 0;
+				for(k=0;k<dest->data_blocks[j]->size;k++){ //delete the old data
+					dest->data_blocks[j]->data[k] = 0;
 				}
 			}
 		}
@@ -145,12 +145,12 @@ void cp(Inode** inodes,int number,Disk* disk){
 				free_inode(disk,dest);
 				return;
 			}
-			for(i=0;i<dest->nb_data_blocks;i++) {
-				dest->data_blocks[i] = source->data_blocks[i];
+			for(j=0;i<dest->nb_data_blocks;i++) {
+				dest->data_blocks[j] = source->data_blocks[j];
 			}
 		}
 		
-		for(i=0;i<dest->nb_data_blocks;i++) {
+		for(j=0;i<dest->nb_data_blocks;i++) {
 			dest->data_blocks[i]->size = source->data_blocks[i]->size;
 			strcpy(dest->data_blocks[i]->data, source->data_blocks[i]->data);
 			/*for(j=0;j<dest->data_blocks[j]->size;j++) { //write the new data
