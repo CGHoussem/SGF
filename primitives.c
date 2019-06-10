@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 #include "struct_SGF.h"
 #include "primitives.h"
 #include "command_shell.h"
@@ -130,7 +131,7 @@ void cp(Inode** inodes,int number,Disk* disk){
 		if(source->nb_data_blocks > 1) { // source file has more data blocks than the destination
 			dest->nb_data_blocks = source->nb_data_blocks;
 			int* reallocation = realloc(dest->data_blocks, dest->nb_data_blocks); 
-			if (reallocation == NULL) { // the realloc hasn't work
+			if(reallocation == NULL) { // the realloc hasn't worked
 				printf("Error while creating the new file.\n");
 				remove_tab_index(dest,disk);
 				free_inode(disk,dest);
@@ -183,24 +184,89 @@ void myrm(Inode* inode,Disk* disk){
 	
 }
 
-void myread(Inode* inode) {
-	printf("%s\n", inode->data_blocks[inode->nb_data_blocks-1]->data);
+char* myread(Inode* inode, char* output) {
+	int i;
+	printf("data : %s\n", inode->data_blocks[0]->data);
+	for(i=0;i<inode->nb_data_blocks;i++) {
+		strcat(output, inode->data_blocks[i]->data);
+	}
+	return output;
 }
 
-void mywrite(Inode* inode,char output[BUFFER_SIZE],Disk* disk) {
+void mywrite(Inode* inode,char* output,Disk* disk) {
 	
 	int id_last_tab = inode->nb_data_blocks-1;
 	int size = inode->data_blocks[id_last_tab]->size;
 	int available = BUFFER_SIZE-size;
 	
-	if(available >= strlen(output)) {
+	if(available > strlen(output)) { // any other data block is needed
 		strcat(inode->data_blocks[id_last_tab]->data, output);
-		printf("\n au passage, contenu du fichier : \n");
-		myread(inode);
+		inode->data_blocks[id_last_tab]->size = strlen(inode->data_blocks[id_last_tab]->data);
+		int str_size = inode->data_blocks[id_last_tab]->size;
+		inode->data_blocks[id_last_tab]->data[str_size] = '\0';
 	}
-	else { //we have to create another
-		printf("\nError : not enough space available\n");
-	}	
+	else { //we have to create another or many other data block(s)
+		inode->date_modification = time(NULL);
+		inode->nb_data_blocks++;
+		int* reallocation = realloc(inode->data_blocks, inode->nb_data_blocks); 
+		if(reallocation == NULL) { // the realloc hasn't worked
+			printf("Error while giving a new data block.\n");
+			inode->nb_data_blocks--;
+			return;
+		}
+			
+		int i, position_output=0;
+		// Completing the last data block
+		for(i=size;i<BUFFER_SIZE;i++) {
+			inode->data_blocks[id_last_tab]->data[i] = output[position_output];
+			position_output++;
+		}
+		
+		int offset = strlen(output)-available; // number of chars remaining
+		int nb_realloc = inode->nb_data_blocks+1;
+		
+		if(offset < BUFFER_SIZE) { // The new data block will be sufficient
+			// Writing in the new data block
+			int* reallocation = realloc(inode->data_blocks, nb_realloc); 
+			if(reallocation == NULL) { // the realloc hasn't worked
+				printf("Error while allocating the new data block.\n");
+				return;
+			}
+			inode->nb_data_blocks++;
+			id_last_tab++;
+			for(i=0;i<offset;i++) {
+				inode->data_blocks[id_last_tab]->data[i] = output[position_output];
+				position_output++;
+			}
+			
+		} else { // The rest of the output requires another data block
+			int extra = (int)round(strlen(output)/BUFFER_SIZE);
+			nb_realloc += extra;
+			
+			// Writing in the new data blocks
+			int* reallocation = realloc(inode->data_blocks, nb_realloc); 
+			if(reallocation == NULL) { // the realloc hasn't worked
+				printf("Error while allocating the new data blocks.\n");
+				return;
+			}
+			inode->nb_data_blocks = nb_realloc;
+			while(id_last_tab < nb_realloc-1) {
+				for(i=0;i<BUFFER_SIZE;i++) {
+					inode->data_blocks[id_last_tab]->data[i] = output[position_output];
+					position_output++;
+				}
+				id_last_tab++;
+			}
+			
+			// Completing the last data block
+			id_last_tab++;
+			int remaining_length = strlen(output)-position_output;
+			for(i=0;i<remaining_length;i++) {
+				inode->data_blocks[id_last_tab]->data[i] = output[position_output];
+				position_output++;
+			}
+		}
+	}
 }
 
 void myrmdir(Inode** inodes,int number,Disk* disk){

@@ -49,7 +49,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
 				if(path_to_destination_directory(parsedInput[i],current_inode,disk) == NULL) {
-					printf("Error at argument %d, the directory was not created \n",i);
+					printf("Error at argument %d, the directory was not created \n",i+1);
 				} 
 			}
 			i++;
@@ -76,7 +76,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			if(parsedInput[i][0] != '-') {
 				inode = path_to_destination(parsedInput[i],current_inode,disk);
 				if(inode == NULL) {
-					printf("Error at argument %d \n",i);
+					printf("Error at argument %d \n",i+1);
 				} else {
 					inode->date_modification = time(NULL);
 				}
@@ -219,10 +219,10 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			if(parsedInput[i][0] != '-') {
 				inode = path_to_inode(parsedInput[i],current_inode,disk);
 				if(inode == NULL) {
-					printf("Error: argument %d is not an existing file \n",i);
+					printf("Error: argument %d is not an existing file \n",i+1);
 				} 
 				else if(inode->type == DIRECTORY) {
-					printf("Error: argument %d is a directory \n",i);
+					printf("Error: argument %d is a directory \n",i+1);
 				} 
 				else {
 					myrm(inode,disk);
@@ -249,13 +249,13 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			if(parsedInput[i][0] != '-') {
 				inode = path_to_inode(parsedInput[i],current_inode,disk);
 				if(inode == NULL) {
-					printf("Error: argument %d is not an existing directory \n",i);
+					printf("Error: argument %d is not an existing directory \n",i+1);
 				} 
 				else if(inode->type != DIRECTORY) {
-					printf("Error: argument %d is not a directory \n",i);
+					printf("Error: argument %d is not a directory \n",i+1);
 				}
 				else if(inode->dir_blocks->nb_index > 2) {
-					printf("Error: argument %d is not an empty directory \n",i);
+					printf("Error: argument %d is not an empty directory \n",i+1);
 				}
 				else {
 					myrm(inode,disk);
@@ -276,7 +276,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			return 1;
 		}
 		
-		int i,j;
+		int i;
 		
 		int hasRedirection = 0;
 		int redirectionIndex = 0;
@@ -285,11 +285,12 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			if(strcmp(parsedInput[i], ">") == 0) 
 			{
 				// verifying if there's a file after the redirection
-				if(i == nb_arg) {
-					printf("Error : missing file input \n");
+				if(i == nb_arg || strcmp(parsedInput[i+1], "cat") == 0) {
+					printf("Error : missing or bad file input \n");
 					free_input(input,parsedInput);
 					return 1;
 				}
+				//////TODO : other verifications
 				redirectionIndex = i;
 				hasRedirection = 1;
 				break;
@@ -301,72 +302,110 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			for(i=1;i<=nb_arg;i++) {
 				inode = path_to_inode(parsedInput[i],current_inode,disk);
 				if(inode == NULL) {
-					printf("Error: argument %d is not an existing file \n",i);
+					printf("Error: argument %d is not an existing file \n",i+1);
 				} 
 				else if(inode->type != TEXT) {
-					printf("Error: argument %d is not a file \n",i);
+					printf("Error: argument %d is not a file \n",i+1);
 				}
 				else {
-					myread(inode);
+					char* output;
+					output = (char*) malloc(BUFFER_SIZE*inode->nb_data_blocks*sizeof(char));
+					printf("%s\n", myread(inode, output));
+					free(output);
 				}
 			}
 			free_input(input,parsedInput);
 			return 1;
 		}
 		
-		/*
-		char output[BUFFER_SIZE] = "";	
-		int taille_totale;
+		int final_size, content_inode_size;
+		int* reallocation;
+		char* content_inodes;
 		
-		// First part of the array (before the redirection char)
+		final_size = BUFFER_SIZE;
+		content_inodes = (char*) malloc(BUFFER_SIZE*sizeof(char));
+
+		// First part of inodes (before the redirection char)
 		for(i=1;i<redirectionIndex;i++) {
-			for(j=0;j<strlen(parsedInput[i]);j++) {
-				taille_totale = strlen(output) + strlen(parsedInput[i]);
-				if(taille_totale <= BUFFER_SIZE) {
-					if(parsedInput[i][j] != '"')
-						output[strlen(output)] = parsedInput[i][j];
-					}
-					else {
-						printf("Error : size of the input is to high\n");
-						free_input(input,parsedInput);
-						return 1;
-					}
+			inode = path_to_inode(parsedInput[i],current_inode,disk);
+			if(inode == NULL) {
+				printf("Error: argument %d is not an existing file \n",i+1);
+				free(content_inodes);
+				free_input(input,parsedInput);
+				return 1;
+			} 
+			else if(inode->type != TEXT) {
+				printf("Error: argument %d is not a file \n",i+1);
+				free(content_inodes);
+				free_input(input,parsedInput);
+				return 1;
 			}
-			output[strlen(output)] = ' ';
+			else {
+				char* content_inode;
+				content_inode_size = BUFFER_SIZE*inode->nb_data_blocks;
+				final_size += content_inode_size;
+				content_inode = (char*) malloc(content_inode_size*sizeof(char));
+				reallocation = realloc(content_inodes, final_size*sizeof(char));
+				if(reallocation == NULL) { // the realloc hasn't worked
+					printf("Error while allocating the new data blocks.\n");
+					free(content_inodes);
+					free_input(input,parsedInput);
+					return 1;
+				}
+				content_inode = myread(inode, content_inode);
+				strcat(content_inodes, content_inode);
+				free(content_inode);
+			}
 		}
 		
 		// Second part of the files which will be displayed (after the file which will be modified)
 		if(nb_arg > redirectionIndex+1) {
 			for(i=redirectionIndex+2;i<=nb_arg;i++) {
-				for(j=0;j<strlen(parsedInput[i]);j++) {
-					taille_totale = strlen(output) + strlen(parsedInput[i]);
-					if(taille_totale <= BUFFER_SIZE) {
-						if(parsedInput[i][j] != '"')
-							output[strlen(output)] = parsedInput[i][j];
-					}
-					else {
-						printf("Error : size of the input is to high\n");
+				for(i=1;i<redirectionIndex;i++) {
+					inode = path_to_inode(parsedInput[i],current_inode,disk);
+					if(inode == NULL) {
+						printf("Error: argument %d is not an existing file \n",i+1);
+						free(content_inodes);
+						free_input(input,parsedInput);
+						return 1;
+					} 
+					else if(inode->type != TEXT) {
+						printf("Error: argument %d is not a file \n",i+1);
+						free(content_inodes);
 						free_input(input,parsedInput);
 						return 1;
 					}
+					else {
+						char* content_inode;
+						content_inode_size = BUFFER_SIZE*inode->nb_data_blocks;
+						final_size += content_inode_size;
+						content_inode = (char*) malloc(content_inode_size*sizeof(char));
+						reallocation = realloc(content_inodes, final_size*sizeof(char));
+						if(reallocation == NULL) { // the realloc hasn't worked
+							printf("Error while allocating the new data blocks.\n");
+							free(content_inodes);
+							free_input(input,parsedInput);
+							return 1;
+						}
+						content_inode = myread(inode, content_inode);
+						strcat(content_inodes, content_inode);
+					}
 				}
-				output[strlen(output)] = ' ';
 			}
-		}
-		
-		printf("\nstring to redirect : \n%s\n", output);
-		
+		}		
+				
 		inode = path_to_inode(parsedInput[redirectionIndex+1],current_inode,disk);
 		if(inode == NULL) {
 			printf("Error: argument %d is not an existing file \n",redirectionIndex+1);
 		} 
 		else if(inode->type != TEXT) {
-			printf("Error: argument %d is not a file \n",i);
+			printf("Error: argument %d is not a file \n",i+1);
 		}
 		else {
-			mywrite(inode,output,disk);
+			mywrite(inode,content_inodes,disk);
 		}
-		*/
+				
+		free(content_inodes);
 		free_input(input,parsedInput);
         return 1;
 	
@@ -424,18 +463,19 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			return 1;
 		}
 		
-		char output[BUFFER_SIZE] = "";	
+		
+		char output[MAX_INPUT_SIZE] = "";
 		int taille_totale;
 		// First part of the array (before the redirection char)
 		for(i=1;i<redirectionIndex;i++) {
 			for(j=0;j<strlen(parsedInput[i]);j++) {
-				taille_totale = strlen(output) + strlen(parsedInput[i]);
-				if(taille_totale <= BUFFER_SIZE) {
+				taille_totale = strlen(output);
+				if(taille_totale < MAX_INPUT_SIZE-1) {
 					if(parsedInput[i][j] != '"')
 						output[strlen(output)] = parsedInput[i][j];
 					}
 					else {
-						printf("Error : size of the input is to high\n");
+						printf("Error : size of the input is too high\n");
 						free_input(input,parsedInput);
 						return 1;
 					}
@@ -447,13 +487,13 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 		if(nb_arg > redirectionIndex+1) {
 			for(i=redirectionIndex+2;i<=nb_arg;i++) {
 				for(j=0;j<strlen(parsedInput[i]);j++) {
-					taille_totale = strlen(output) + strlen(parsedInput[i]);
-					if(taille_totale <= BUFFER_SIZE) {
+					taille_totale = strlen(output);
+					if(taille_totale < MAX_INPUT_SIZE-1) {
 						if(parsedInput[i][j] != '"')
 							output[strlen(output)] = parsedInput[i][j];
 					}
 					else {
-						printf("Error : size of the input is to high\n");
+						printf("Error : size of the input is too high\n");
 						free_input(input,parsedInput);
 						return 1;
 					}
@@ -461,6 +501,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 				output[strlen(output)] = ' ';
 			}
 		}
+		output[strlen(output)] = '\0';
 		
 		printf("\nstring to redirect : \n%s\n", output);
 		
@@ -469,7 +510,7 @@ int executeLine(Disk* disk, char* input,Inode* current_inode){
 			printf("Error: argument %d is not an existing file \n",redirectionIndex+1);
 		} 
 		else if(inode->type != TEXT) {
-			printf("Error: argument %d is not a file \n",i);
+			printf("Error: argument %d is not a file \n",i+1);
 		}
 		else {
 			mywrite(inode,output,disk);
@@ -647,7 +688,7 @@ Inode* path_to_inode(char* parsedInput,Inode* current_inode,Disk* disk){
 			return NULL;
 		}
 	}
-
+	
 	return inode;
 }
 
