@@ -18,7 +18,7 @@ void format_disk(Disk* disk){
 	disk->nb_dir_blocks = 0;
 	disk->nb_data_blocks = 0;
 	
-	mkdir("root",disk,NULL);
+	mymkdir("root",disk,NULL);
 
 	printf("The disk has been successfully formatted!\n");
 }

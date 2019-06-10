@@ -672,7 +672,8 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
         return 1;
     
     } else if (strcmp(input, "help") == 0){
-        printf("Available commands: mkdir, touch, ls, cp, mv, rm, exit\n");
+        printf("Available commands: ls, touch, cp, mv, cd, rm, rmdir, cat, echo, chmod, df, exit\n");
+        printf("In development commands: ln\n");
         free_input(input,parsedInput);
         return 1;
    
