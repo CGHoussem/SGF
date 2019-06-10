@@ -223,10 +223,10 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
     } else if (strcmp(input, "cd") == 0){
 		if(parsedInput[1] != NULL){
 			inode = path_to_inode(parsedInput[1],*current_inode,disk);
-			if(inode != NULL) {
+			if(inode != NULL && inode->type == DIRECTORY) {
 				mycd(inode, current_inode);
 			} else {
-				printf("Error : path doesnt exist \n");
+				printf("Error : directory doesn't exist \n");
 			}
 		} else {
 			printf("Missing input \n");
