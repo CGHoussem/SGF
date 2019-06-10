@@ -61,7 +61,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 1) {
 			for(j=0;j<(*current_inode)->dir_blocks->nb_index;j++) {
-				ls((*current_inode)->dir_blocks->tab_index[j].inode,(*current_inode)->dir_blocks->tab_index[j].name);
+				myls((*current_inode)->dir_blocks->tab_index[j].inode,(*current_inode)->dir_blocks->tab_index[j].name);
 			}
 			free_input(input,parsedInput);
 			return 1;
@@ -74,11 +74,11 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 				if(inode == NULL) {
 					printf("Error at argument %d : path doesn't exist \n",i);
 				} else if(inode->type != DIRECTORY) {
-					ls(inode,NULL);
+					myls(inode,NULL);
 				} else {
 					printf("%s : \n",inode->name);
 					for(j=0;j<inode->dir_blocks->nb_index;j++) {
-						ls(inode->dir_blocks->tab_index[j].inode,inode->dir_blocks->tab_index[j].name);
+						myls(inode->dir_blocks->tab_index[j].inode,inode->dir_blocks->tab_index[j].name);
 					}
 				}
 			}
@@ -159,7 +159,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 			}
 			i++;
 		}
-		cp(inodes_input,nb_arg,disk);
+		mycp(inodes_input,nb_arg,disk);
 		free(inodes_input);
 		free_input(input,parsedInput);
         return 1;
@@ -221,12 +221,10 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
  
     
     } else if (strcmp(input, "cd") == 0){
-		//TODO gérer cd hors du dossier courant
 		if(parsedInput[1] != NULL){
 			inode = path_to_inode(parsedInput[1],*current_inode,disk);
 			if(inode != NULL) {
-				cd(inode, current_inode);
-				//*current_inode = inode;
+				mycd(inode, current_inode);
 			} else {
 				printf("Error : path doesnt exist \n");
 			}
@@ -639,7 +637,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 			return 1;
 		}
 		
-		df(disk);
+		mydf(disk);
 		
 		return 1;
 		
@@ -667,7 +665,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 			i++;
 		}
 		
-		ln(inodes_input,*current_inode,nb_arg,disk);
+		myln(inodes_input,*current_inode,nb_arg,disk);
 		
 		free(inodes_input);
 		free_input(input,parsedInput);
@@ -812,7 +810,7 @@ Inode* path_to_destination_directory(char* parsedInput,Inode* current_inode,Disk
 		inode = next_inode;
 		next_inode = search_file_in_directory(file_name,inode->dir_blocks);
 		if(next_inode == NULL && create == 0) {
-			mkdir(file_name,disk,inode);
+			mymkdir(file_name,disk,inode);
 			inode_create = get_last_inode(*disk);
 			next_inode = inode_create;
 			create = 1;

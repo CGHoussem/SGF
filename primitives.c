@@ -16,7 +16,7 @@ echo “texte” > file : pour écrire dans un fichier
 */
 //TODO vérifier que le disque ne soit pas complet avant d'ajouter
 
-void mkdir(char* name,Disk* disk,Inode* current_inode){
+void mymkdir(char* name,Disk* disk,Inode* current_inode){
 	Inode* inode = NULL;
 	
 	inode = (Inode*)malloc(sizeof(Inode));
@@ -74,7 +74,7 @@ void mycreate(char* name,Disk* disk,Inode* current_inode){
 	
 }
 
-void ls(Inode* current_inode,char* name_index) {
+void myls(Inode* current_inode,char* name_index) {
 	char file_type[MAX_FILE_NAME];
 	char* file_name;
 	
@@ -104,7 +104,7 @@ void ls(Inode* current_inode,char* name_index) {
 
 }
 
-void cp(Inode** inodes,int number,Disk* disk){
+void mycp(Inode** inodes,int number,Disk* disk){
 	int i,j,k;
 	Inode* source = NULL;
 	Inode* dest = NULL;
@@ -160,7 +160,7 @@ void cp(Inode** inodes,int number,Disk* disk){
 	}		
 }
 
-void cd (Inode *inode,Inode **current_inode){
+void mycd (Inode *inode,Inode **current_inode){
 	*current_inode = inode;
 }
 
@@ -170,7 +170,7 @@ void mymv(Inode** inodes,int number,Disk* disk){
 	//Inode* source = NULL;
 	//Inode* dest = NULL;
 	
-	cp(inodes,number,disk);
+	mycp(inodes,number,disk);
 	for(i=0;i<number-1;i++) {
 		myrm(inodes[i],disk);
 	}
@@ -303,7 +303,7 @@ void mychmod(Inode** inodes,int number,char permissions[9],Disk* disk){
 	}		
 }
 
-void df(Disk* disk) {
+void mydf(Disk* disk) {
 	int available = DISK_BYTES_LIMIT-(disk->nb_data_blocks*1024);
 	
 	printf("\n#### Informations about your disk : ####\n\n");
@@ -313,9 +313,7 @@ void df(Disk* disk) {
 	printf("Taille de l'espace disponible :  %d octets\n\n", available);
 }
 
-
-
-void ln(Inode** inodes,Inode* current_inode,int nb_arg, Disk* disk){
+void myln(Inode** inodes,Inode* current_inode,int nb_arg, Disk* disk){
 	int i;
 	
 	if (nb_arg == 1){ //add in the current directory an index associated with this inode without changing the name of the file.
