@@ -349,43 +349,39 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 			return 1;
 		}
 		
-		int final_size, content_inode_size;
-		int* reallocation;
-		char* content_inodes;
-		
-		final_size = BUFFER_SIZE;
-		content_inodes = (char*) malloc(BUFFER_SIZE*sizeof(char));
+		int content_inode_size = 0;
+		//int final size;
+		//int* reallocation;
+		char content_inodes[MAX_REDIRECTION_SIZE] = "";
 
 		// First part of inodes (before the redirection char)
 		for(i=1;i<redirectionIndex;i++) {
 			inode = path_to_inode(parsedInput[i],*current_inode,disk);
 			if(inode == NULL) {
 				printf("Error: argument %d is not an existing file \n",i+1);
-				free(content_inodes);
 				free_input(input,parsedInput);
 				return 1;
 			} 
 			else if(inode->type != TEXT) {
 				printf("Error: argument %d is not a file \n",i+1);
-				free(content_inodes);
 				free_input(input,parsedInput);
 				return 1;
 			}
 			else {
 				char* content_inode;
 				content_inode_size = BUFFER_SIZE*inode->nb_data_blocks;
-				final_size += content_inode_size;
 				content_inode = (char*) malloc(content_inode_size*sizeof(char));
+				/*content_inode_size = BUFFER_SIZE*inode->nb_data_blocks;
+				final_size += content_inode_size;
 				reallocation = realloc(content_inodes, final_size*sizeof(char));
 				if(reallocation == NULL) { // the realloc hasn't worked
 					printf("Error while allocating the new data blocks.\n");
 					free(content_inodes);
 					free_input(input,parsedInput);
 					return 1;
-				}
+				}*/
 				content_inode = myread(inode, content_inode);
 				strcat(content_inodes, content_inode);
-				free(content_inode);
 			}
 		}
 		
@@ -396,28 +392,27 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 					inode = path_to_inode(parsedInput[i],*current_inode,disk);
 					if(inode == NULL) {
 						printf("Error: argument %d is not an existing file \n",i+1);
-						free(content_inodes);
 						free_input(input,parsedInput);
 						return 1;
 					} 
 					else if(inode->type != TEXT) {
 						printf("Error: argument %d is not a file \n",i+1);
-						free(content_inodes);
 						free_input(input,parsedInput);
 						return 1;
 					}
 					else {
 						char* content_inode;
 						content_inode_size = BUFFER_SIZE*inode->nb_data_blocks;
-						final_size += content_inode_size;
 						content_inode = (char*) malloc(content_inode_size*sizeof(char));
+						/*
+						final_size += content_inode_size;
 						reallocation = realloc(content_inodes, final_size*sizeof(char));
 						if(reallocation == NULL) { // the realloc hasn't worked
 							printf("Error while allocating the new data blocks.\n");
 							free(content_inodes);
 							free_input(input,parsedInput);
 							return 1;
-						}
+						}*/
 						content_inode = myread(inode, content_inode);
 						strcat(content_inodes, content_inode);
 					}
@@ -436,7 +431,6 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 			mywrite(inode,content_inodes,disk);
 		}
 				
-		free(content_inodes);
 		free_input(input,parsedInput);
         return 1;
 	
@@ -534,7 +528,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		}
 		output[strlen(output)] = '\0';
 		
-		printf("\nstring to redirect : \n%s\n", output);
+		printf("string to redirect : \n%s\n", output);
 		
 		inode = path_to_inode(parsedInput[redirectionIndex+1],*current_inode,disk);
 		if(inode == NULL) {
@@ -672,7 +666,8 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
         return 1;
     
     } else if (strcmp(input, "help") == 0){
-        printf("Available commands: mkdir, touch, ls, cp, mv, rm, exit\n");
+        printf("Available commands: ls, touch, cp, mv, cd, rm, rmdir, cat, echo, chmod, df, exit\n");
+        printf("In development commands: ln\n");
         free_input(input,parsedInput);
         return 1;
    
