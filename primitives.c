@@ -29,7 +29,9 @@ void mkdir(char* name,Disk* disk,Inode* current_inode){
 	inode->date_modification=time(NULL);
 	
 	inode->data_blocks = NULL;
-	inode->dir_blocks = allocation_tab_block_directory(1);
+	inode->dir_blocks = allocation_block_directory();
+	
+	inode->nb_data_blocks = 0;
 
 	inode->next_inode = NULL;
 	
@@ -57,7 +59,7 @@ void mycreate(char* name,Disk* disk,Inode* current_inode){
 	inode->date_creation=time(NULL);
 	inode->date_modification=time(NULL);
 	
-	inode->nb_data_blocks = 1;
+	//inode->nb_data_blocks = 1;
 	inode->data_blocks = allocation_tab_block_data(1);
 
 	inode->nb_data_blocks = 1;
@@ -72,28 +74,34 @@ void mycreate(char* name,Disk* disk,Inode* current_inode){
 	
 }
 
-void ls(Inode* current_inode) {
-	int number = current_inode->dir_blocks->nb_index;
+void ls(Inode* current_inode,char* name_index) {
 	char file_type[MAX_FILE_NAME];
+	char* file_name;
 	
-	for(int i=0;i<number;i++) {
-		switch(current_inode->dir_blocks->tab_index[i].inode->type) { //file type
-			case TEXT:
-				strcpy(file_type,"Text");
-				break;
-			case BINARY:
-				strcpy(file_type,"Binary");
-				break;
-			case DIRECTORY:
-				strcpy(file_type,"Directory");
-				break;
-			default:
-				strcpy(file_type," ");
-				break;
-		}
-		printf("%s -> file type : %s, rights : %s\n",current_inode->dir_blocks->tab_index[i].name, 
-		file_type, current_inode->dir_blocks->tab_index[i].inode->permissions);
+	
+	if(name_index == NULL) {
+		file_name = current_inode->name;
+	} else {
+		file_name = name_index;
 	}
+	
+	switch(current_inode->type) { //file type
+		case TEXT:
+			strcpy(file_type,"Text");
+			break;
+		case BINARY:
+			strcpy(file_type,"Binary");
+			break;
+		case DIRECTORY:
+			strcpy(file_type,"Directory");
+			break;
+		default:
+			strcpy(file_type," ");
+			break;
+	}
+	printf("%s -> file type : %s, rights : %s\n",file_name, 
+	file_type, current_inode->permissions);
+
 }
 
 void cp(Inode** inodes,int number,Disk* disk){
@@ -152,18 +160,8 @@ void cp(Inode** inodes,int number,Disk* disk){
 	}		
 }
 
-void cd (char *name,Inode *current_inode, Disk* disk){	
-	Directory_block* directory;
-	directory= current_inode->dir_blocks;
-	if (search_file_in_directory(name,directory))
-	{
-		current_inode = search_file_in_directory(name,directory);
-		disk->inodes=current_inode;
-	}
-	else 
-	{
-		printf("This file %s doesn't exist\n",name);
-	}
+void cd (Inode *inode,Inode **current_inode){
+	*current_inode = inode;
 }
 
 void mymv(Inode** inodes,int number,Disk* disk){
@@ -315,16 +313,31 @@ void df(Disk* disk) {
 	printf("Taille de l'espace disponible :  %d octets\n\n", available);
 }
 
-/* 
 
-void ln(Inode** inode, Inode* current_inode,Disk* disk){
-	int nbr_inode=sizeof*inode;
+
+void ln(Inode** inodes,Inode* current_inode,int nb_arg, Disk* disk){
+	int i;
 	
-	if (nbr_inode==1){ //add in the current directory an index associated with this inode without changing the name of the file.
-			
-		update_tab_index(current_inode,*inode);
-	}
-	else if(nbr_inode==2){ //create a symbolic link (once again, an index) of the first inode given, and will give the name of the second one to the created index.
+	if (nb_arg == 1){ //add in the current directory an index associated with this inode without changing the name of the file.
+		update_tab_index(current_inode,inodes[0]);
+	} else if (inodes[nb_arg-1] != NULL && inodes[nb_arg-1]->type == DIRECTORY) {
+		for(i=0;i<nb_arg-1;i++) {
+			if(inodes[i] == NULL) {
+				printf("Error : argument %d doesn't exist \n",i+1);
+			} else if(inodes[i]->type == DIRECTORY) {
+				printf("Error : argument %d is a directory \n",i+1);
+			} else {
+				update_tab_index(inodes[nb_arg-1],inodes[i]);
+			}
+		}
+	} else if (nb_arg == 2 && inodes[nb_arg-1] != NULL && inodes[nb_arg-1]->type != DIRECTORY) {
+		printf("Impossible to link, the argument 2 already exist \n");
+	} 
+		
+	
+	
+	
+	/*else if(nbr_inode==2){ //create a symbolic link (once again, an index) of the first inode given, and will give the name of the second one to the created index.
 		update_tab_index(current_inode,inode[0]);
 		Inode* tmp=inode[0];
 		inode[1]=tmp;
@@ -337,5 +350,5 @@ void ln(Inode** inode, Inode* current_inode,Disk* disk){
 		
 			update_tab_index(current_inode, inode[i]);
 		}
-	}
-}*/
+	}*/
+}

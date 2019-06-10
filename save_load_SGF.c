@@ -51,10 +51,10 @@ int load_disk(Disk* disk){
 	return 1;
 }
 
-Directory_block* allocation_tab_block_directory(int size){
+Directory_block* allocation_block_directory(){
 	Directory_block* tab_block = NULL;
 	
-	tab_block=(Directory_block*) malloc(size*sizeof(Directory_block));
+	tab_block=(Directory_block*) malloc(sizeof(Directory_block));
 	tab_block->next_block = NULL;
 	
 	return tab_block;
@@ -159,6 +159,7 @@ void free_inode(Disk* disk,Inode* inode){
 		for(int i=0;i<inode->nb_data_blocks;i++) {
 			free_block_data(disk,inode->data_blocks[i]);
 		}
+		free(inode->data_blocks);
 		inode->data_blocks = NULL;
 	}
 	
