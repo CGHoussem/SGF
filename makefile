@@ -5,7 +5,7 @@ OBJS = save_load.o primitives.o command_shell.o main.o
 all: program
 
 program: $(OBJS)
-	$(CC) $(CFLAGS) -o program $(OBJS)
+	$(CC) $(CFLAGS) -o program $(OBJS) -lm
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c -o main.o main.c
