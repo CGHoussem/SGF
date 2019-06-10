@@ -540,7 +540,16 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		
 		inode = path_to_inode(parsedInput[redirectionIndex+1],*current_inode,disk);
 		if(inode == NULL) {
-			printf("Error: argument %d is not an existing file \n",redirectionIndex+1);
+			inode = path_to_destination(parsedInput[redirectionIndex+1],*current_inode,disk);
+			if(inode == NULL) {
+				printf("Error at argument %d \n",i+1);
+				free_input(input,parsedInput);
+				return 1;
+					
+			} else {
+				inode->date_modification = time(NULL);
+				mywrite(inode,output,disk);
+			}
 		} 
 		else if(inode->type != TEXT) {
 			printf("Error: argument %d is not a file \n",i+1);
@@ -848,7 +857,6 @@ Inode* path_to_last_directory(char* parsedInput,Inode* current_inode,Disk* disk)
 		return next_inode;
 	}
 }
-
 
 int count_path(char** parsedInput) {
 	int i = 1;
