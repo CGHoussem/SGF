@@ -12,4 +12,6 @@
 #define BINARY 2
 #define DIRECTORY 3
 
+#define DEBUG_MODE 1
+
 #endif

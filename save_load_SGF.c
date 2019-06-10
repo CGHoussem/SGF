@@ -8,8 +8,6 @@
 #include "save_load_SGF.h"
 #include "constants.h"
 
-#define DEBUG_MODE
-
 void format_disk(Disk* disk){
 	disk->inodes = NULL;
 	disk->dir_blocks = NULL;
@@ -22,10 +20,9 @@ void format_disk(Disk* disk){
 	mkdir("root", disk, NULL);
 }
 
-void addDataBlockTail(Data_block** head, Data_block block){
+void addDataBlockHead(Data_block** head, Data_block block){
 
 	Data_block* new_block = (Data_block*) malloc(sizeof(Data_block));
-
 
 	strcpy(new_block->data, block.data);
 	new_block->size = block.size;
@@ -38,7 +35,7 @@ void addDataBlockTail(Data_block** head, Data_block block){
 	*head = new_block;
 }
 
-void addDirBlockTail(Directory_block** head, Directory_block block){
+void addDirBlockHead(Directory_block** head, Directory_block block){
 
 	Directory_block* new_block = (Directory_block*) malloc(sizeof(Directory_block));
 
@@ -53,7 +50,7 @@ void addDirBlockTail(Directory_block** head, Directory_block block){
 	*head = new_block;
 }
 
-void addInodeTail(Inode** head, Inode inode){
+void addInodeHead(Inode** head, Inode inode){
 
 	Inode* new_inode = (Inode*) malloc(sizeof(Inode));
 
@@ -87,7 +84,7 @@ int save_inode_dir_block_index(int index_index, int inode_index, int db_index, I
 		return 1;
 	}
 	fprintf(f, "%s", index.name);
-	#ifdef DEBUG_MODE
+	#if (DEBUG_MODE==1)
 	printf("saved index %d of inode %d directory block %d\n", index_index, inode_index, db_index);
 	#endif
 	fclose(f);
@@ -108,7 +105,7 @@ int save_dir_block_index(int index_index, int db_index, Index index){
 	}
 
 	fprintf(f, "%s", index.name);
-	#ifdef DEBUG_MODE
+	#if (DEBUG_MODE==1)
 	printf("saved index %d of directory block %d\n", index_index, db_index);
 	#endif
 	fclose(f);
@@ -141,7 +138,7 @@ int save_inode_data_blocks(int inode_index, Data_block* blocks){
 			fwrite(&current->size, sizeof(int), 1, f);
 			current = current->next_block;
 		}
-		#ifdef DEBUG_MODE
+		#if (DEBUG_MODE==1)
 		printf("saved %d data blocks of inode %d\n", sum, inode_index);
 		#endif
 		fclose(f);
@@ -168,7 +165,7 @@ int save_data_blocks(Data_block* blocks){
 		fwrite(&current->size, sizeof(int), 1, f);
 		current = current->next_block;
 	}
-	#ifdef DEBUG_MODE
+	#if (DEBUG_MODE==1)
 	printf("saved %d data blocks\n", sum);
 	#endif
 	fclose(f);
@@ -197,12 +194,12 @@ int load_data_blocks(Data_block** blocks, int nb_data_blocks){
 			}
 
 			if (read_data_block(f, &block) > 0) {
-				addDataBlockTail(blocks, block);
+				addDataBlockHead(blocks, block);
 			}
 			sum = i+1;
 			fclose(f);
 		}
-		#ifdef DEBUG_MODE
+		#if (DEBUG_MODE==1)
 		printf("loaded %d data blocks\n", sum);
 		#endif
 
@@ -227,17 +224,17 @@ int load_inode_data_blocks(int inode_index, Data_block** blocks, int nb_data_blo
 			}
 
 			if (read_data_block(f, &block) > 0) {
-				addDataBlockTail(blocks, block);
+				addDataBlockHead(blocks, block);
 			}
 			sum = i;
 			fclose(f);
 		}
-		#ifdef DEBUG_MODE
+		#if (DEBUG_MODE==1)
 		printf("loaded %d data blocks of inode %d\n", sum, inode_index+1);
 		#endif
 		free(filename);
 	} else {
-		#ifdef DEBUG_MODE
+		#if (DEBUG_MODE==1)
 		printf("there is no data blocks for inode %d to be loaded\n", inode_index+1);
 		#endif
 	}
@@ -259,12 +256,12 @@ int load_inode_dir_blocks(Inode* inode, int inode_index, Directory_block** block
 		}
 
 		if (read_inode_dir_block(inode, f, &block, inode_index+1, i) > 0) {
-			addDirBlockTail(blocks, block);
+			addDirBlockHead(blocks, block);
 		}
 		sum = i+1;
 		fclose(f);
 	}
-	#ifdef DEBUG_MODE
+	#if (DEBUG_MODE==1)
 	printf("loaded %d dirblocks of inode %d\n", sum, inode_index);
 	#endif
 	free(filename);
@@ -290,7 +287,7 @@ int save_inode_dir_blocks(int inode_index, Directory_block* blocks){
 		current = current->next_block;
 		fclose(f);
 	}
-	#ifdef DEBUG_MODE
+	#if (DEBUG_MODE==1)
 	printf("saved %d directory blocks of the inode %d\n", sum, inode_index);
 	#endif
 	free(filename);
@@ -316,7 +313,7 @@ int save_dir_blocks(Directory_block* blocks){
 		}
 		current = current->next_block;
 	}
-	#ifdef DEBUG_MODE
+	#if (DEBUG_MODE==1)
 	printf("saved %d directory blocks\n", sum);
 	#endif
 	fclose(f);
@@ -381,12 +378,12 @@ int load_dir_blocks(Directory_block** blocks, int nb_dir_blocks){
 		}
 
 		if (read_dir_block(f, &block, i) > 0) {
-			addDirBlockTail(blocks, block);
+			addDirBlockHead(blocks, block);
 		}
 		sum = i+1;
 		fclose(f);
 	}
-	#ifdef DEBUG_MODE
+	#if (DEBUG_MODE==1)
 	printf("loaded %d dirblocks\n", sum);
 	#endif
 	free(filename);
@@ -416,10 +413,11 @@ int save_inodes(Inode* inodes){
 		fprintf(f, "%d\n", current->nb_data_blocks);
 		
 		save_inode_dir_blocks(sum, current->dir_blocks);
-		save_inode_data_blocks(sum, current->data_blocks);
+		// TODO: save_inode_data_blocks needs to be changed!
+		//save_inode_data_blocks(sum, current->data_blocks);
 		current = current->next_inode;
 	}
-	#ifdef DEBUG_MODE
+	#if (DEBUG_MODE==1)
 	printf("saved %d inodes\n", sum);
 	#endif
 	free(filename);
@@ -439,7 +437,8 @@ int read_inode(FILE* f, int inode_index, Inode* inode){
 	inode->dir_blocks = NULL;
 	inode->data_blocks = NULL;
 	return_value &= load_inode_dir_blocks(inode, inode_index, &inode->dir_blocks);
-	return_value &= load_inode_data_blocks(inode_index, &inode->data_blocks, inode->nb_data_blocks);
+	// TODO : load_inode_data_blocks needs to be changed!
+	//return_value &= load_inode_data_blocks(inode_index, &inode->data_blocks, inode->nb_data_blocks);
 	return return_value;
 }
 
@@ -459,12 +458,12 @@ int load_inodes(Inode** inodes, int nb_inodes){
 			return 1;
 		}
 		if (read_inode(f, i, inode) > 0) {
-			addInodeTail(inodes, *inode);
+			addInodeHead(inodes, *inode);
 		}
 		sum = i + 1;
 		fclose(f);
 	}
-	#ifdef DEBUG_MODE
+	#if (DEBUG_MODE==1)
 	printf("loaded %d inodes\n", sum);
 	#endif
 	free(filename);
@@ -491,11 +490,12 @@ int save_disk(Disk disk){
 		return 0;
 	}
 	
+	// TODO: save_data_blocks going to be changed!
 	// save data blocks
-	if (disk.data_blocks != NULL && save_data_blocks(disk.data_blocks) == 1){
-		printf("Error saving the data blocks of the disk!\n");
-		return 0;
-	}
+	//if (disk.data_blocks != NULL && save_data_blocks(disk.data_blocks) == 1){
+	//	printf("Error saving the data blocks of the disk!\n");
+	//	return 0;
+	//}
 
 	return 1;
 }
@@ -513,7 +513,7 @@ int disk_exists(){
 	return file_exists(DISK_FILE_NAME);
 }
 
-#ifdef DEBUG_MODE
+#if (DEBUG_MODE==1)
 void d_print_inodes(Inode* inodes){
 	if (inodes != NULL){
 		Inode* temp = inodes;
@@ -585,14 +585,16 @@ int load_disk(Disk* disk){
 		return 0;
 	}
 
+
+	// TODO: load_data_blocks goign to be changed!
 	// load the data blocks
-	if (file_exists("datablocks1.tmp")){
-		disk->data_blocks = NULL;
-		if (load_data_blocks(&disk->data_blocks, disk->nb_data_blocks) ==1){
-			printf("The loading of the disk data_blocks has failed!\n");
-			return 0;
-		}
-	}
+	//if (file_exists("datablocks1.tmp")){
+	//	disk->data_blocks = NULL;
+	//	if (load_data_blocks(&disk->data_blocks, disk->nb_data_blocks) ==1){
+	//		printf("The loading of the disk data_blocks has failed!\n");
+	//		return 0;
+	//	}
+	//}
 
 	// Cleaning related-disk files
 	system("rm *.tmp *.dat");

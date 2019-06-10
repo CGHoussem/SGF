@@ -5,6 +5,7 @@
 #include "command_shell.h"
 #include "primitives.h"
 #include "save_load_SGF.h"
+#include "constants.h"
 
 char* readline(){ 
     char* input = malloc(sizeof(char) * SHELL_BUFFER_SIZE);
@@ -35,8 +36,29 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 	Inode** inodes_input = NULL;
 	Inode* inode = NULL;
     char** parsedInput = parse(input);
-    
-    if (strcmp(input, "mkdir") == 0){
+	#if (DEBUG_MODE==1)
+    if (strcmp(input, "debug") == 0){
+		printf("DISK INODES:\n");
+		d_print_inodes(disk->inodes);
+		printf("-----------:\n");
+		printf("DISK FIRST INODE DIR BLOCKS :\n");
+		d_print_dirblocks(disk->inodes[0].dir_blocks);
+		printf("-----------:\n");
+		printf("DISK FIRST INODE DIR BLOCKS INDEXES :\n");
+		d_print_indexes(disk->inodes[0].dir_blocks->tab_index, disk->inodes[0].dir_blocks->nb_index);
+		printf("============:\n");
+		printf("DISK DIR BLOCKS:\n");
+		d_print_dirblocks(disk->dir_blocks);
+		printf("-----------:\n");
+		printf("DISK FIRST DIR BLOCK INDEXES :\n");
+		d_print_indexes(disk->dir_blocks[0].tab_index, disk->dir_blocks[0].nb_index);
+		printf("-----------:\n");
+		free_input(input,parsedInput);
+        return 1;
+
+	} else 
+	#endif
+	if (strcmp(input, "mkdir") == 0){
 		nb_arg = count_path(parsedInput);
 		if(nb_arg < 1) {
 			printf("Missing file input \n");
