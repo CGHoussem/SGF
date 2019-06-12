@@ -15,7 +15,7 @@ void add_dir_block(Directory_block* dir_block, Disk* disk); //add a directory bl
 Data_block* get_last_data_block(Disk disk); //return the last data block of the list
 void add_data_block(Data_block* dir_block, Disk* disk); //add a data block at the end of the list
 void update_tab_index(Inode* current_inode, Inode* inode_to_add); //update the index of current_inode by adding inode_to_add
-void remove_tab_index(Inode* inode_to_remove,Disk* disk); //remove the inode from the index of the parent directory
+void remove_tab_index(Inode* inode_to_remove,Inode* parent_inode,Disk* disk); //remove the inode from the index of the parent directory
 Inode* search_file_in_directory(char* file_name,Directory_block* directory); //return the inode of the given file name if exists, else return NULL
 Inode* search_parent_inode(Inode* inode,Disk* disk); //return the parent inode of the given inode
 

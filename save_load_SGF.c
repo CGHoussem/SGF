@@ -322,11 +322,11 @@ void update_tab_index(Inode* current_inode, Inode* inode_to_add){
 	
 }
 
-void remove_tab_index(Inode* inode_to_remove,Disk* disk){
+void remove_tab_index(Inode* inode_to_remove,Inode* parent_inode,Disk* disk){
 	Index* new_index = NULL;
 	int i;
 	int j = 0;
-	Inode* parent_inode = search_parent_inode(inode_to_remove,disk);
+	//Inode* parent_inode = search_parent_inode(inode_to_remove,disk);
 	
 	new_index = allocation_index(parent_inode->dir_blocks->nb_index-1);
 

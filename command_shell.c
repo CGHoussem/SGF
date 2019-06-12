@@ -34,6 +34,8 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 	int nb_arg,i,j,cpt;
 	Inode** inodes_input = NULL;
 	Inode* inode = NULL;
+	Inode** inode_and_parent = NULL;
+	Inode** parent_inodes_input = NULL;
     char** parsedInput = parse(input);
     
     if (strcmp(input, "mkdir") == 0){
@@ -127,7 +129,8 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
 				if(cpt == nb_arg-1) { //destination file
-					inodes_input[cpt] = path_to_destination(parsedInput[i],*current_inode,disk);
+					inode_and_parent = path_to_destination_and_parent(parsedInput[i],*current_inode,disk);
+					inodes_input[cpt] = inode_and_parent[0];
 					if(inodes_input[cpt] == NULL) { //destination file doesn't exist
 						free(inodes_input);
 						free_input(input,parsedInput);
@@ -135,7 +138,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 					}
 					if(nb_arg != 2 && (inodes_input[cpt])->type != DIRECTORY) {
 						printf("Error: More than a file to copy into a file \n");
-						remove_tab_index(inodes_input[cpt],disk);
+						remove_tab_index(inodes_input[cpt],inode_and_parent[1],disk);
 						free_inode(disk,inodes_input[cpt]);
 						free(inodes_input);
 						free_input(input,parsedInput);
@@ -159,7 +162,8 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 			}
 			i++;
 		}
-		mycp(inodes_input,nb_arg,disk);
+		mycp(inodes_input,inode_and_parent[1],nb_arg,disk);
+		free(inode_and_parent);
 		free(inodes_input);
 		free_input(input,parsedInput);
         return 1;
@@ -174,6 +178,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		}
 		
 		inodes_input = (Inode**) malloc(nb_arg*sizeof(Inode*)); //input of move
+		parent_inodes_input = (Inode**) malloc(nb_arg*sizeof(Inode*));
 		
 		i = 1;
 		cpt = 0;
@@ -181,41 +186,55 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
 				if(cpt == nb_arg-1) { //destination file
-					inodes_input[cpt] = path_to_destination(parsedInput[i],*current_inode,disk);
+					inode_and_parent = path_to_destination_and_parent(parsedInput[i],*current_inode,disk);
+					inodes_input[cpt] = inode_and_parent[0];
+					parent_inodes_input[cpt] = inode_and_parent[1];
 					if(inodes_input[cpt] == NULL) { //destination file doesn't exist
 						free(inodes_input);
+						free(parent_inodes_input);
+						free(inode_and_parent);
 						free_input(input,parsedInput);
 						return 1;
 					}
 					if(nb_arg != 2 && (inodes_input[cpt])->type != DIRECTORY) {
 						printf("Error: More than a file to move into a file \n");
-						remove_tab_index(inodes_input[cpt],disk);
+						remove_tab_index(inodes_input[cpt],parent_inodes_input[cpt],disk);
 						free_inode(disk,inodes_input[cpt]);
 						free(inodes_input);
+						free(parent_inodes_input);
+						free(inode_and_parent);
 						free_input(input,parsedInput);
 						return 1;
 					} 
 				} else { //source file
-					inodes_input[cpt] = path_to_inode(parsedInput[i],*current_inode,disk);
+					inode_and_parent = path_to_inode_and_parent_inode(parsedInput[i],*current_inode,disk);
+					inodes_input[cpt] = inode_and_parent[0];
+					parent_inodes_input[cpt] = inode_and_parent[1];
 					if(inodes_input[cpt] == NULL) {
 						printf("Error: argument %d is not an existing file \n",(cpt+1));
 						free_input(input,parsedInput);
 						free(inodes_input);
+						free(parent_inodes_input);
+						free(inode_and_parent);
 						return 1;
 					}else if(inodes_input[cpt]->type == DIRECTORY) {
 						printf("Error: argument %d is a directory \n",(cpt+1));
 						free_input(input,parsedInput);
 						free(inodes_input);
+						free(parent_inodes_input);
+						free(inode_and_parent);
 						return 1;
 					}
 				}
 				cpt++;
+				free(inode_and_parent);
 			}
 			i++;
 		}
 		
-		mymv(inodes_input,nb_arg,disk);
+		mymv(inodes_input,parent_inodes_input,nb_arg,disk);
 		free(inodes_input);
+		free(parent_inodes_input);
 		free_input(input,parsedInput);
         return 1;
  
@@ -247,16 +266,17 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
-				inode = path_to_inode(parsedInput[i],*current_inode,disk);
-				if(inode == NULL) {
+				inode_and_parent = path_to_inode_and_parent_inode(parsedInput[i],*current_inode,disk);
+				if(inode_and_parent[0] == NULL) {
 					printf("Error: argument %d is not an existing file \n",i+1);
 				} 
-				else if(inode->type == DIRECTORY) {
+				else if(inode_and_parent[0]->type == DIRECTORY) {
 					printf("Error: argument %d is a directory \n",i+1);
 				} 
 				else {
-					myrm(inode,disk);
+					myrm(inode_and_parent[0],inode_and_parent[1],disk);
 				}
+				free(inode_and_parent);
 			}
 			i++;
 		}
@@ -277,22 +297,23 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
-				inode = path_to_inode(parsedInput[i],*current_inode,disk);
-				if(inode == NULL) {
+				inode_and_parent = path_to_inode_and_parent_inode(parsedInput[i],*current_inode,disk);
+				if(inode_and_parent[0] == NULL) {
 					printf("Error: argument %d is not an existing directory \n",i+1);
 				} 
-				else if(inode->type != DIRECTORY) {
+				else if(inode_and_parent[0]->type != DIRECTORY) {
 					printf("Error: argument %d is not a directory \n",i+1);
 				}
-				else if(inode->dir_blocks->nb_index > 2) {
+				else if(inode_and_parent[0]->dir_blocks->nb_index > 2) {
 					printf("Error: argument %d is not an empty directory \n",i+1);
 				}
-				else if(inode == *current_inode) {
+				else if(inode_and_parent[0] == *current_inode) {
 					printf("Error: cannot delete the current directory \n");
 				}
 				else {
-					myrm(inode,disk);
+					myrm(inode_and_parent[0],inode_and_parent[1],disk);
 				}
+				free(inode_and_parent);
 			}
 			i++;
 		}
@@ -765,6 +786,7 @@ Inode* path_to_destination(char* parsedInput,Inode* current_inode,Disk* disk){
 	Inode* inode = NULL;
 	Inode* next_inode = NULL;
 	Inode* inode_create = NULL;
+	Inode* parent_inode_create = NULL;
 	int create = 0;
 	
 	if(parsedInput[0] == '/') {
@@ -779,11 +801,12 @@ Inode* path_to_destination(char* parsedInput,Inode* current_inode,Disk* disk){
 		if(next_inode == NULL && create == 0) {
 			mycreate(file_name,disk,inode);
 			inode_create = get_last_inode(*disk);
+			parent_inode_create = inode;
 			next_inode = inode_create;
 			create = 1;
 		} else if(next_inode == NULL && create == 1) {
 			printf("Error: Destination path doesn't exist \n");
-			remove_tab_index(inode_create,disk);
+			remove_tab_index(inode_create,parent_inode_create,disk);
 			free_inode(disk,inode_create);
 			return NULL;
 		}	
@@ -796,6 +819,7 @@ Inode* path_to_destination_directory(char* parsedInput,Inode* current_inode,Disk
 	Inode* inode = NULL;
 	Inode* next_inode = NULL;
 	Inode* inode_create = NULL;
+	Inode* parent_inode_create = NULL;
 	int create = 0;
 	
 	if(parsedInput[0] == '/') {
@@ -810,11 +834,12 @@ Inode* path_to_destination_directory(char* parsedInput,Inode* current_inode,Disk
 		if(next_inode == NULL && create == 0) {
 			mymkdir(file_name,disk,inode);
 			inode_create = get_last_inode(*disk);
+			parent_inode_create = inode;
 			next_inode = inode_create;
 			create = 1;
 		} else if(next_inode == NULL && create == 1) {
 			printf("Error: Path doesn't exist \n");
-			remove_tab_index(inode_create,disk);
+			remove_tab_index(inode_create,parent_inode_create,disk);
 			free_inode(disk,inode_create);
 			return NULL;
 		}	
@@ -852,6 +877,88 @@ Inode* path_to_last_directory(char* parsedInput,Inode* current_inode,Disk* disk)
 	} else {
 		return next_inode;
 	}
+}
+
+Inode** path_to_inode_and_parent_inode(char* parsedInput,Inode* current_inode,Disk* disk){	
+	char* file_name;
+	Inode* inode = NULL;
+	Inode* next_inode = NULL;
+	Inode** res = NULL;
+	int not_found = 0;
+	
+	res = (Inode**) malloc(2*sizeof(Inode*));
+	
+	if(parsedInput[0] == '/') {
+		inode = disk->inodes;
+		next_inode = disk->inodes;
+	} else {
+		inode = current_inode;
+		next_inode = current_inode;
+	}
+	
+	for(file_name = strtok(parsedInput,"/");file_name != NULL;file_name = strtok(NULL,"/")){
+		inode = next_inode;
+		if(inode != NULL) {
+			next_inode = search_file_in_directory(file_name,inode->dir_blocks);
+		}
+		if(next_inode == NULL && not_found == 0) {
+			not_found = 1;
+		} else if(next_inode == NULL && not_found == 1) {
+			printf("Error: Path doesn't exist \n");;
+			res[0] = NULL;
+			res[1] = NULL;
+			return res;
+		}	
+	}
+	
+	res[0] = next_inode;
+	res[1] = inode;
+	
+	return res;
+}
+
+Inode** path_to_destination_and_parent(char* parsedInput,Inode* current_inode,Disk* disk){	
+	char* file_name;
+	Inode* inode = NULL;
+	Inode* next_inode = NULL;
+	Inode* inode_create = NULL;
+	Inode* parent_inode_create = NULL;
+	Inode** res = NULL;
+	
+	int create = 0;
+	res = (Inode**) malloc(2*sizeof(Inode*));
+	
+	if(parsedInput[0] == '/') {
+		inode = disk->inodes;
+		next_inode = disk->inodes;
+	} else {
+		inode = current_inode;
+		next_inode = current_inode;
+	}
+	
+	for(file_name = strtok(parsedInput,"/");file_name != NULL;file_name = strtok(NULL,"/")){
+		inode = next_inode;
+		next_inode = search_file_in_directory(file_name,inode->dir_blocks);
+		if(next_inode == NULL && create == 0) {
+			mycreate(file_name,disk,inode);
+			inode_create = get_last_inode(*disk);
+			parent_inode_create = inode;
+			next_inode = inode_create;
+			create = 1;
+		} else if(next_inode == NULL && create == 1) {
+			printf("Error: Destination path doesn't exist \n");
+			remove_tab_index(inode_create,parent_inode_create,disk);
+			free_inode(disk,inode_create);
+			res[0] = NULL;
+			res[1] = NULL;
+			return res;
+		}	
+	}
+	
+	res[0] = next_inode;
+	res[1] = inode;
+	
+	return res;
 }
 
 int count_path(char** parsedInput) {

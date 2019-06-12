@@ -104,10 +104,13 @@ void myls(Inode* current_inode,char* name_index) {
 
 }
 
-void mycp(Inode** inodes,int number,Disk* disk){
+void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 	int i,j,k;
 	Inode* source = NULL;
 	Inode* dest = NULL;
+	Inode* parent = NULL;
+	
+	
 	
 	for(i=0;i<number-1;i++) {
 		source = inodes[i];
@@ -117,19 +120,21 @@ void mycp(Inode** inodes,int number,Disk* disk){
 			if(dest == NULL) { //file doesn't exist
 				mycreate(source->name,disk,inodes[number-1]);
 				dest = get_last_inode(*disk);
+				parent = inodes[number-1];
 			}
 		} else {
 			dest = inodes[number-1];
+			parent = parent_dest;
 		}
-
+		
 		//copy the inode's informations
 		for(j=0;j<9;j++){
-			dest->permissions[i] = source->permissions[i];
+			dest->permissions[j] = source->permissions[j];
 		}
 		dest-> date_modification = time(NULL);
 				
-		for(j=0;i<dest->nb_data_blocks;i++) {	
-			if(dest->data_blocks[i]->size != 0) {
+		for(j=0;j<dest->nb_data_blocks;j++) {	
+			if(dest->data_blocks[j]->size != 0) {
 				for(k=0;k<dest->data_blocks[j]->size;k++){ //delete the old data
 					dest->data_blocks[j]->data[k] = 0;
 				}
@@ -141,18 +146,18 @@ void mycp(Inode** inodes,int number,Disk* disk){
 			int* reallocation = realloc(dest->data_blocks, dest->nb_data_blocks); 
 			if(reallocation == NULL) { // the realloc hasn't worked
 				printf("Error while creating the new file.\n");
-				remove_tab_index(dest,disk);
+				remove_tab_index(dest,parent,disk);
 				free_inode(disk,dest);
 				return;
 			}
-			for(j=0;i<dest->nb_data_blocks;i++) {
+			for(j=0;j<dest->nb_data_blocks;j++) {
 				dest->data_blocks[j] = source->data_blocks[j];
 			}
 		}
 		
-		for(j=0;i<dest->nb_data_blocks;i++) {
-			dest->data_blocks[i]->size = source->data_blocks[i]->size;
-			strcpy(dest->data_blocks[i]->data, source->data_blocks[i]->data);
+		for(j=0;j<dest->nb_data_blocks;j++) {
+			dest->data_blocks[j]->size = source->data_blocks[j]->size;
+			strcpy(dest->data_blocks[j]->data, source->data_blocks[j]->data);
 			/*for(j=0;j<dest->data_blocks[j]->size;j++) { //write the new data
 				dest->data_blocks[i]->data = source->data_blocks[i]->data[j];
 			}*/
@@ -164,20 +169,20 @@ void mycd (Inode *inode,Inode **current_inode){
 	*current_inode = inode;
 }
 
-void mymv(Inode** inodes,int number,Disk* disk){
+void mymv(Inode** inodes,Inode** parent_inode,int number,Disk* disk){
     
     int i;
 	//Inode* source = NULL;
 	//Inode* dest = NULL;
 	
-	mycp(inodes,number,disk);
+	mycp(inodes,parent_inode[number-1],number,disk);
 	for(i=0;i<number-1;i++) {
-		myrm(inodes[i],disk);
+		myrm(inodes[i],parent_inode[i],disk);
 	}
 }
 
-void myrm(Inode* inode,Disk* disk){
-	remove_tab_index(inode,disk);
+void myrm(Inode* inode,Inode* parent_inode,Disk* disk){
+	remove_tab_index(inode,parent_inode,disk);
 	free_inode(disk,inode);
 	
 }
@@ -264,22 +269,6 @@ void mywrite(Inode* inode,char* output,Disk* disk) {
 			}
 		}
 	}
-}
-
-void myrmdir(Inode** inodes,int number,Disk* disk){
-	
-	int i;
-	printf("%d repertoires à supprimer\n", number);
-	for(i=0;i<number;i++) {
-		printf("%s\n", inodes[i]->name);
-		if(inodes[i] != NULL) { //file does exist
-			remove_tab_index(inodes[i],disk);
-			free_inode(disk,inodes[i]);
-		}
-		else { //file doesn't exist
-			printf("The directory %s doesn't exist here ! \n", inodes[i]->name);
-		}
-	}		
 }
 
 void mychmod(Inode** inodes,int number,char permissions[9],Disk* disk){
