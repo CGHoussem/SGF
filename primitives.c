@@ -123,16 +123,23 @@ void mycp(Inode** inodes,int number,Disk* disk){
 		}
 
 		//copy the inode's informations
-		for(j=0;j<9;j++){
+		/*for(j=0;j<9;j++){
 			dest->permissions[i] = source->permissions[i];
-		}
+		}*/
+		strcpy(dest->permissions, source->permissions);
 		dest-> date_modification = time(NULL);
-				
-		for(j=0;i<dest->nb_data_blocks;i++) {	
+		
+		
+		dest->nb_data_blocks = source->nb_data_blocks;
+		dest->data_blocks = source->data_blocks;
+		/*for(j=0;i<dest->nb_data_blocks;i++) {	
 			if(dest->data_blocks[i]->size != 0) {
 				for(k=0;k<dest->data_blocks[j]->size;k++){ //delete the old data
 					dest->data_blocks[j]->data[k] = 0;
 				}
+			}
+			else {
+				printf("empty bitch");
 			}
 		}
 		
@@ -153,10 +160,10 @@ void mycp(Inode** inodes,int number,Disk* disk){
 		for(j=0;i<dest->nb_data_blocks;i++) {
 			dest->data_blocks[i]->size = source->data_blocks[i]->size;
 			strcpy(dest->data_blocks[i]->data, source->data_blocks[i]->data);
-			/*for(j=0;j<dest->data_blocks[j]->size;j++) { //write the new data
+			for(j=0;j<dest->data_blocks[j]->size;j++) { //write the new data
 				dest->data_blocks[i]->data = source->data_blocks[i]->data[j];
-			}*/
-		}
+			}
+		}*/
 	}		
 }
 
