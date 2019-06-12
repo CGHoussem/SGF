@@ -139,12 +139,12 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 		/*for(j=0;j<9;j++){
 			dest->permissions[i] = source->permissions[i];
 		}*/
-		strcpy(dest->permissions, source->permissions);
-		dest-> date_modification = time(NULL);
+				strcpy(dest->permissions, source->permissions);
+				dest-> date_modification = time(NULL);
 		
 		
-		dest->nb_data_blocks = source->nb_data_blocks;
-		dest->data_blocks = source->data_blocks;
+				dest->nb_data_blocks = source->nb_data_blocks;
+				dest->data_blocks = source->data_blocks;
 		/*for(j=0;i<dest->nb_data_blocks;i++) {	
 			if(dest->data_blocks[i]->size != 0) {
 				for(k=0;k<dest->data_blocks[j]->size;k++){ //delete the old data
@@ -174,7 +174,7 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 		for(j=0;j<dest->nb_data_blocks;j++) {
 			dest->data_blocks[j]->size = source->data_blocks[j]->size;
 			strcpy(dest->data_blocks[j]->data, source->data_blocks[j]->data);
-			/*for(j=0;j<dest->data_blocks[j]->size;j++) { //write the new data
+			for(j=0;j<dest->data_blocks[j]->size;j++) { //write the new data
 
 		for(j=0;i<dest->nb_data_blocks;i++) {
 			dest->data_blocks[i]->size = source->data_blocks[i]->size;
@@ -184,7 +184,9 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 				dest->data_blocks[i]->data = source->data_blocks[i]->data[j];
 			}
 		}*/
-	}		
+			}
+		}
+	}			
 }
 
 void mycd (Inode *inode,Inode **current_inode){
