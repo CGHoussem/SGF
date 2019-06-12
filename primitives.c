@@ -105,7 +105,7 @@ void myls(Inode* current_inode,char* name_index) {
 }
 
 void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
-	int i,j,k;
+	int i,j;
 	Inode* source = NULL;
 	Inode* dest = NULL;
 	Inode* parent = NULL;
@@ -132,11 +132,12 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 			dest->permissions[j] = source->permissions[j];
 		}
 		dest-> date_modification = time(NULL);
-				
+		
+		/*	
 		for(j=0;j<dest->nb_data_blocks;j++) {	
 			if(dest->data_blocks[j]->size != 0) {
 
-		/*for(j=0;j<9;j++){
+		for(j=0;j<9;j++){
 			dest->permissions[i] = source->permissions[i];
 		}*/
 		strcpy(dest->permissions, source->permissions);
@@ -174,7 +175,7 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 		for(j=0;j<dest->nb_data_blocks;j++) {
 			dest->data_blocks[j]->size = source->data_blocks[j]->size;
 			strcpy(dest->data_blocks[j]->data, source->data_blocks[j]->data);
-			/*for(j=0;j<dest->data_blocks[j]->size;j++) { //write the new data
+			for(j=0;j<dest->data_blocks[j]->size;j++) { //write the new data
 
 		for(j=0;i<dest->nb_data_blocks;i++) {
 			dest->data_blocks[i]->size = source->data_blocks[i]->size;
