@@ -108,12 +108,10 @@ void myls(Inode* current_inode,char* name_index) {
 }
 
 void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
-	int i,j;
+	int i,j,k;
 	Inode* source = NULL;
 	Inode* dest = NULL;
 	Inode* parent = NULL;
-	
-	
 	
 	for(i=0;i<number-1;i++) {
 		source = inodes[i];
@@ -131,32 +129,18 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 		}
 		
 		//copy the inode's informations
-		for(j=0;j<9;j++){
-			dest->permissions[j] = source->permissions[j];
-		}
+		
+		strcpy(dest->permissions, source->permissions);
+		
 		dest-> date_modification = time(NULL);
 		
-		/*	
-		for(j=0;j<dest->nb_data_blocks;j++) {	
-			if(dest->data_blocks[j]->size != 0) {
-
-		for(j=0;j<9;j++){
-			dest->permissions[i] = source->permissions[i];
-		}*/
-				strcpy(dest->permissions, source->permissions);
-				dest-> date_modification = time(NULL);
-		
-		
-				dest->nb_data_blocks = source->nb_data_blocks;
-				dest->data_blocks = source->data_blocks;
-		/*for(j=0;i<dest->nb_data_blocks;i++) {	
+		dest->nb_data_blocks = source->nb_data_blocks;
+				
+		for(j=0;i<dest->nb_data_blocks;i++) {	
 			if(dest->data_blocks[i]->size != 0) {
 				for(k=0;k<dest->data_blocks[j]->size;k++){ //delete the old data
 					dest->data_blocks[j]->data[k] = 0;
 				}
-			}
-			else {
-				printf("empty bitch");
 			}
 		}
 		
@@ -170,24 +154,11 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 				return;
 			}
 			for(j=0;j<dest->nb_data_blocks;j++) {
-				dest->data_blocks[j] = source->data_blocks[j];
+				dest->data_blocks[j] = allocation_block_data();
+				//dest->data_blocks[j] = source->data_blocks[j];
 			}
 		}
-		
-
-		for(j=0;j<dest->nb_data_blocks;j++) {
-			dest->data_blocks[j]->size = source->data_blocks[j]->size;
-			strcpy(dest->data_blocks[j]->data, source->data_blocks[j]->data);
-			for(j=0;j<dest->data_blocks[j]->size;j++) { //write the new data
-
-		for(j=0;i<dest->nb_data_blocks;i++) {
-			dest->data_blocks[i]->size = source->data_blocks[i]->size;
-			strcpy(dest->data_blocks[i]->data, source->data_blocks[i]->data);
-			for(j=0;j<dest->data_blocks[j]->size;j++) { //write the new data
-
-				dest->data_blocks[i]->data = source->data_blocks[i]->data[j];
-			}
-		}*/
+		dest->data_blocks = source->data_blocks;
 	}
 }		
 
