@@ -47,6 +47,7 @@ struct Inode {
 	Data_block** data_blocks;
 	
 	int nb_data_blocks;
+	int nb_links;
 	
 	Inode* prev_inode;
 	Inode* next_inode;

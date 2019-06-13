@@ -37,6 +37,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 	Inode** inode_and_parent = NULL;
 	Inode** parent_inodes_input = NULL;
     char** parsedInput = parse(input);
+    char name_link[MAX_FILE_NAME];
     
     if (strcmp(input, "mkdir") == 0){
 		nb_arg = count_path(parsedInput);
@@ -674,7 +675,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		while(parsedInput[i] != NULL) {
 			if(parsedInput[i][0] != '-') {
 				if(nb_arg > 1 && cpt == nb_arg-1) {
-					inodes_input[cpt] = path_to_last_directory(parsedInput[i],*current_inode,disk);
+					inodes_input[cpt] = path_to_last_directory(parsedInput[i],*current_inode,disk,name_link);
 				} else {
 					inodes_input[cpt] = path_to_inode(parsedInput[i],*current_inode,disk);
 				}
@@ -682,8 +683,8 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 			}
 			i++;
 		}
-		
-		myln(inodes_input,*current_inode,nb_arg,disk);
+
+		myln(inodes_input,*current_inode,nb_arg,disk,name_link);
 		
 		free(inodes_input);
 		free_input(input,parsedInput);
@@ -850,7 +851,7 @@ Inode* path_to_destination_directory(char* parsedInput,Inode* current_inode,Disk
 	return next_inode;
 }
 
-Inode* path_to_last_directory(char* parsedInput,Inode* current_inode,Disk* disk){	
+Inode* path_to_last_directory(char* parsedInput,Inode* current_inode,Disk* disk,char name_link[MAX_FILE_NAME]){	
 	char* file_name;
 	Inode* inode = NULL;
 	Inode* next_inode = NULL;
@@ -863,6 +864,7 @@ Inode* path_to_last_directory(char* parsedInput,Inode* current_inode,Disk* disk)
 	}
 	
 	for(file_name = strtok(parsedInput,"/");file_name != NULL;file_name = strtok(NULL,"/")){
+		strcpy(name_link,file_name);
 		inode = next_inode;
 		next_inode = search_file_in_directory(file_name,inode->dir_blocks);
 		if(next_inode == NULL && not_found == 0) {
@@ -875,6 +877,7 @@ Inode* path_to_last_directory(char* parsedInput,Inode* current_inode,Disk* disk)
 	if(next_inode == NULL) {
 		return inode;
 	} else {
+		strcpy(name_link,"\0");
 		return next_inode;
 	}
 }

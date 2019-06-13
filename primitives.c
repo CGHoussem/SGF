@@ -32,6 +32,7 @@ void mymkdir(char* name,Disk* disk,Inode* current_inode){
 	inode->dir_blocks = allocation_block_directory();
 	
 	inode->nb_data_blocks = 0;
+	inode->nb_links = 1;
 
 	inode->next_inode = NULL;
 	
@@ -64,6 +65,8 @@ void mycreate(char* name,Disk* disk,Inode* current_inode){
 
 	inode->nb_data_blocks = 1;
 	inode->dir_blocks = NULL;
+	
+	inode->nb_links = 1;
 
 	inode->next_inode = NULL;
 	
@@ -185,10 +188,8 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 				dest->data_blocks[i]->data = source->data_blocks[i]->data[j];
 			}
 		}*/
-			}
-		}
-	}			
-}
+	}
+}		
 
 void mycd (Inode *inode,Inode **current_inode){
 	*current_inode = inode;
@@ -208,7 +209,10 @@ void mymv(Inode** inodes,Inode** parent_inode,int number,Disk* disk){
 
 void myrm(Inode* inode,Inode* parent_inode,Disk* disk){
 	remove_tab_index(inode,parent_inode,disk);
-	free_inode(disk,inode);
+	inode->nb_links--;
+	if(inode->nb_links == 0) {
+		free_inode(disk,inode);
+	}
 	
 }
 
@@ -326,8 +330,8 @@ void mydf(Disk* disk) {
 	printf("Taille de l'espace disponible :  %d octets\n\n", available);
 }
 
-void myln(Inode** inodes,Inode* current_inode,int nb_arg, Disk* disk){
-	int i;
+void myln(Inode** inodes,Inode* current_inode,int nb_arg, Disk* disk,char name_link[MAX_FILE_NAME]){
+	int i,nb_index;
 	
 	if (nb_arg == 1){ //add in the current directory an index associated with this inode without changing the name of the file.
 		update_tab_index(current_inode,inodes[0]);
@@ -339,6 +343,11 @@ void myln(Inode** inodes,Inode* current_inode,int nb_arg, Disk* disk){
 				printf("Error : argument %d is a directory \n",i+1);
 			} else {
 				update_tab_index(inodes[nb_arg-1],inodes[i]);
+				if(strcmp(name_link,"\0") != 0) {
+					nb_index = inodes[nb_arg-1]->dir_blocks->nb_index;
+					strcpy(inodes[nb_arg-1]->dir_blocks->tab_index[nb_index-1].name,name_link);
+				}
+				inodes[i]->nb_links++;
 			}
 		}
 	} else if (nb_arg == 2 && inodes[nb_arg-1] != NULL && inodes[nb_arg-1]->type != DIRECTORY) {

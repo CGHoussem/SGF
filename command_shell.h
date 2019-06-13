@@ -17,8 +17,8 @@ Inode* path_to_destination(char* parsedInput,Inode* current_inode,Disk* disk);
 //or create a directory and return its inode if the last directory doesn't exist 
 //or return NULL if a directory in the middle of the path doesn't exist
 Inode* path_to_destination_directory(char* parsedInput,Inode* current_inode,Disk* disk);
-//return the inode associated with the last directory of the given path, NULL if the path is wrong
-Inode* path_to_last_directory(char* parsedInput,Inode* current_inode,Disk* disk);
+//return the inode associated with the last directory of the given path, NULL if the path is wrong, save name_link with the name of the last file
+Inode* path_to_last_directory(char* parsedInput,Inode* current_inode,Disk* disk,char name_link[MAX_FILE_NAME]);
 //return a tab of 2 inodes, the first is the inode associated with the given path, the other one is the parent inode
 Inode** path_to_inode_and_parent_inode(char* parsedInput,Inode* current_inode,Disk* disk);
 //return a tab of 2 inodes, the first is the inode associated with the given path, 
