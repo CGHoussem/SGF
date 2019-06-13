@@ -153,12 +153,16 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 				free_inode(disk,dest);
 				return;
 			}
-			for(j=0;j<dest->nb_data_blocks;j++) {
-				dest->data_blocks[j] = allocation_block_data();
-				//dest->data_blocks[j] = source->data_blocks[j];
+		}
+		for(j=0;j<dest->nb_data_blocks;j++) {
+			//dest->data_blocks[j] = allocation_block_data();
+			//dest->data_blocks[j] = source->data_blocks[j];
+			for(k=0;k<source->data_blocks[j]->size;k++){ //write the new data
+				dest->data_blocks[j]->data[k] = source->data_blocks[j]->data[k];
 			}
 		}
-		dest->data_blocks = source->data_blocks;
+
+		//dest->data_blocks = source->data_blocks;
 	}
 }		
 
