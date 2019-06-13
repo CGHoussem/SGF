@@ -333,7 +333,7 @@ void remove_tab_index(Inode* inode_to_remove,Inode* parent_inode,Disk* disk){
 
 	
 	for(i=0;i<parent_inode->dir_blocks->nb_index;i++){
-		if(delete == 1 || parent_inode->dir_blocks->tab_index[i].inode != inode_to_remove) {
+		if(delete == 1 || strcmp(parent_inode->dir_blocks->tab_index[i].name,inode_to_remove->name) != 0) {
 			new_index[j] = parent_inode->dir_blocks->tab_index[i]; //copy the old index in the new one without the inode to remove
 			j++;
 		} else {

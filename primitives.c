@@ -308,8 +308,11 @@ void mydf(Disk* disk) {
 void myln(Inode** inodes,Inode* current_inode,int nb_arg, Disk* disk,char name_link[MAX_FILE_NAME]){
 	int i,nb_index;
 	
-	if (nb_arg == 1){ //add in the current directory an index associated with this inode without changing the name of the file.
+	
+	if (nb_arg == 1 && inodes[0] != NULL){ //add in the current directory an index associated with this inode without changing the name of the file.
 		update_tab_index(current_inode,inodes[0]);
+	} else if (nb_arg == 1 && inodes[0] == NULL) {
+		printf("Error: argument 1 doesn't exist \n");
 	} else if (inodes[nb_arg-1] != NULL && inodes[nb_arg-1]->type == DIRECTORY) {
 		for(i=0;i<nb_arg-1;i++) {
 			if(inodes[i] == NULL) {
