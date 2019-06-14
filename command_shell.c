@@ -159,6 +159,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 						return 1;
 					}
 				}
+				printf("%p \n",inodes_input[cpt]);
 				cpt++;
 			}
 			i++;

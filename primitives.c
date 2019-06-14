@@ -124,7 +124,7 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 				parent = inodes[number-1];
 			}
 			for(j=0;j<10;j++) {
-				dest->permissions[i] = source->permissions[i];
+				dest->permissions[j] = source->permissions[j];
 			}
 			
 		} else {
@@ -138,17 +138,17 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 		
 		dest-> date_modification = time(NULL);
 		
-		dest->nb_data_blocks = source->nb_data_blocks;
+		//dest->nb_data_blocks = source->nb_data_blocks;
 				
-		for(j=0;i<dest->nb_data_blocks;i++) {	
-			if(dest->data_blocks[i]->size != 0) {
+		for(j=0;j<dest->nb_data_blocks;j++) {	
+			if(dest->data_blocks[j]->size != 0) {
 				for(k=0;k<dest->data_blocks[j]->size;k++){ //delete the old data
 					dest->data_blocks[j]->data[k] = 0;
 				}
 			}
 		}
 		
-		if(source->nb_data_blocks > 1) { // source file has more data blocks than the destination
+		if(source->nb_data_blocks > dest->nb_data_blocks) { // source file has more data blocks than the destination
 			int* reallocation = realloc(dest->data_blocks, source->nb_data_blocks); 
 			if(reallocation == NULL) { // the realloc hasn't worked
 				printf("Error while creating the new file.\n");
