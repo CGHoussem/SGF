@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -Wall -Werror -g -std=c99
 OBJS = save_load.o primitives.o command_shell.o main.o
 
 all: program

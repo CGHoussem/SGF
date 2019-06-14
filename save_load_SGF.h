@@ -9,12 +9,13 @@ int file_exists(char* filename); // checks if there is file that exists with a g
 int disk_exists(); // checks if the disk file exists or not
 
 // Save Functions
-int save_disk(Disk disk); // physically saves the state of the disk (return 0 if error ecountered)
+int save_disk(Disk* disk); // physically saves the state of the disk (return 0 if error ecountered)
 int save_inode_data_blocks(int inode_index, Data_block* blocks); // physically saves a list of data blocks in a temporary file
 int save_inode_dir_blocks(int inode_index, Directory_block* blocks); // physcially saves a list of directory blocks in a temporary file
 int save_data_blocks(Data_block* blocks); // physically saves a list of data blocks in a temporary file
 int save_dir_blocks(Directory_block* blocks); // physcially saves a list of directory blocks in a temporary file
 int save_inodes(Inode* inodes); // physcailly saves a list of inodes in a temporary file
+int save_index(int index_index, int db_index, Index index);
 
 // Load Functions
 int load_disk(Disk* disk); // loads the state of the saved disk (returns 0 if error encountered)

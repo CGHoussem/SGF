@@ -41,18 +41,15 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		printf("DISK INODES:\n");
 		d_print_inodes(disk->inodes);
 		printf("-----------:\n");
-		printf("DISK FIRST INODE DIR BLOCKS :\n");
-		d_print_dirblocks(disk->inodes[0].dir_blocks);
+		Directory_block* temp = (Directory_block*) malloc(sizeof(Directory_block));
+		temp = disk->dir_blocks;
+		int count = 0;
+		do {
+			printf("DISK DIR BLOCK %d :\n", (++count));
+			d_print_dirblocks(temp);
+			temp = temp->next_block;
+		} while (temp != NULL);
 		printf("-----------:\n");
-		//printf("DISK FIRST INODE DIR BLOCKS INDEXES :\n");
-		//d_print_indexes(disk->inodes[0].dir_blocks->tab_index, disk->inodes[0].dir_blocks->nb_index);
-		//printf("============:\n");
-		//printf("DISK DIR BLOCKS:\n");
-		//d_print_dirblocks(disk->dir_blocks);
-		//printf("-----------:\n");
-		//printf("DISK FIRST DIR BLOCK INDEXES :\n");
-		//d_print_indexes(disk->dir_blocks[0].tab_index, disk->dir_blocks[0].nb_index);
-		//printf("-----------:\n");
 		free_input(input,parsedInput);
         return 1;
 
@@ -338,7 +335,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		int i;
 		
 		int hasRedirection = 0;
-		int redirectionIndex = 0;
+		//int redirectionIndex = 0;
 		// checks if there is redirection
 		for(i=1;i<=nb_arg;i++) {
 			if(strcmp(parsedInput[i], ">") == 0) 
@@ -349,7 +346,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 					free_input(input,parsedInput);
 					return 1;
 				}
-				redirectionIndex = i;
+				//redirectionIndex = i;
 				hasRedirection = 1;
 				break;
 			}

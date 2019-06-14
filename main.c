@@ -30,7 +30,7 @@ int main(int argc, char** argv){
     }
 
 	// Saving the disk
-	if (save_disk(disk) == 0) {
+	if (save_disk(&disk) == 0) {
 		printf("Saving of the disk has failed!\n");
 	}
 	
