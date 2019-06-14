@@ -308,10 +308,10 @@ void mydf(Disk* disk) {
 	int available = DISK_BYTES_LIMIT-(disk->nb_data_blocks*1024);
 	
 	printf("\n#### Informations about your disk : ####\n\n");
-	printf("Nombre d'inodes utilisés : %d\n", disk->nb_inode);
-	printf("Nombre de blocs de données utilisés : %d\n", disk->nb_data_blocks);
-	printf("Nombre de blocs de répertoires utilisés : %d\n", disk->nb_dir_blocks);
-	printf("Taille de l'espace disponible :  %d octets\n\n", available);
+	printf("Number of used inodes : %d\n", disk->nb_inode);
+	printf("Number of used data blocks : %d\n", disk->nb_data_blocks);
+	printf("Number of used directory blocks : %d\n", disk->nb_dir_blocks);
+	printf("Available space on the disk :  %d bytes\n\n", available);
 }
 
 void myln(Inode** inodes,Inode* current_inode,int nb_arg, Disk* disk,char name_link[MAX_FILE_NAME]){

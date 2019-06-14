@@ -122,7 +122,7 @@ void init_permissions(char permissions[10]){
 	permissions[1]='w';
 	permissions[2]='x';
 	permissions[3]='r';
-	permissions[4]='-';
+	permissions[4]='w';
 	permissions[5]='-';
 	permissions[6]='r';
 	permissions[7]='-';

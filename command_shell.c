@@ -159,7 +159,6 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 						return 1;
 					}
 				}
-				printf("%p \n",inodes_input[cpt]);
 				cpt++;
 			}
 			i++;
@@ -618,7 +617,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 			}
 		}
 		
-		printf ("Given input is a number : %s\n", parsedInput[1]);
+		//printf ("Given input is a number : %s\n", parsedInput[1]);
 		
 		//files input of chmod
 		inodes_input = (Inode**) malloc(nb_arg*sizeof(Inode*));
@@ -701,6 +700,10 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
     } else if (strcmp(input, "exit") == 0){
 		free_input(input,parsedInput);
         return 0;
+        
+	} else if(strcmp(input, "clear") == 0) {
+		system("clear");
+		return 1;
     
     } else {
         printf("%s: command not found\n", input);
