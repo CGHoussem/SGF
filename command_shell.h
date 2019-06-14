@@ -29,6 +29,6 @@ int count_path(char** parsedInput);
 //free the input
 void free_input(char* input,char** parsedInput);
 //converts the rights input into an array representing the rights
-char* convertRights(char* rights, int length, char permissions[9]);
+char* convertRights(char* rights, int length, char permissions[10]);
 
 #endif

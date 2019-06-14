@@ -99,7 +99,9 @@ void init_block_directory(Directory_block* block,Inode* inode_directory,Inode* i
 }
 
 void init_block_data(Data_block* block,Disk* disk){
-
+	
+	block->data[0] = '\0';
+	
 	block->size = 0;
 	
 	block->next_block = NULL;

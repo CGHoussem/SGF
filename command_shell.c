@@ -103,7 +103,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 			if(parsedInput[i][0] != '-') {
 				inode = path_to_destination(parsedInput[i],*current_inode,disk);
 				if(inode == NULL) {
-					printf("Error at argument %d \n",i+1);
+					printf("Error at argument %d \n",i);
 				} else {
 					inode->date_modification = time(NULL);
 				}
@@ -378,6 +378,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		//int final size;
 		//int* reallocation;
 		char content_inodes[MAX_REDIRECTION_SIZE] = "";
+		content_inodes[0] = '\0';
 
 		// First part of inodes (before the redirection char)
 		for(i=1;i<redirectionIndex;i++) {
@@ -553,13 +554,13 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		}
 		output[strlen(output)] = '\0';
 		
-		printf("string to redirect : \n%s\n", output);
+		//printf("string to redirect : \n%s\n", output);
 		
 		inode = path_to_inode(parsedInput[redirectionIndex+1],*current_inode,disk);
 		if(inode == NULL) {
 			inode = path_to_destination(parsedInput[redirectionIndex+1],*current_inode,disk);
 			if(inode == NULL) {
-				printf("Error at argument %d \n",i+1);
+				printf("Error at argument %d \n",i);
 				free_input(input,parsedInput);
 				return 1;
 					
@@ -569,7 +570,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 			}
 		} 
 		else if(inode->type != TEXT) {
-			printf("Error: argument %d is not a file \n",i+1);
+			printf("Error: argument %d is not a file \n",i);
 		}
 		else {
 			mywrite(inode,output,disk);
@@ -638,9 +639,9 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 			i++;
 		}
 		
-		char permissions[9];
-		strcpy(permissions, convertRights(parsedInput[1], length, permissions));
-		mychmod(inodes_input,nb_arg-1,permissions,disk);
+		char permissions[10];
+		//strcpy(permissions, );
+		mychmod(inodes_input,nb_arg-1,convertRights(parsedInput[1], length, permissions),disk);
 		free(inodes_input);
 		free_input(input,parsedInput);
         return 1;
@@ -691,8 +692,8 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
         return 1;
     
     } else if (strcmp(input, "help") == 0){
-        printf("Available commands: ls, touch, cp, mv, cd, rm, rmdir, cat, echo, chmod, df, exit\n");
-        printf("In development commands: ln\n");
+        printf("Available commands: ls, touch, cp, mv, cd, rm, rmdir, cat, echo, chmod, df, ln, exit\n");
+        //printf("In development commands: ln\n");
         free_input(input,parsedInput);
         return 1;
    
@@ -707,7 +708,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
     }
 }
 
-char* convertRights(char* rights, int length, char permissions[9]) {
+char* convertRights(char* rights, int length, char permissions[10]) {
 
 	int rights_user, rights_group, rights_other;
 
@@ -758,6 +759,8 @@ char* convertRights(char* rights, int length, char permissions[9]) {
 		if(42%rights_other == 0 && rights_other != 1) permissions[7] = 'w';
 		if(rights_other%2 != 0) permissions[8] = 'x';
 	}	
+
+	permissions[9] = '\0';
 	
 	return permissions;
 }

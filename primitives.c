@@ -123,14 +123,18 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 				dest = get_last_inode(*disk);
 				parent = inodes[number-1];
 			}
+			for(j=0;j<10;j++) {
+				dest->permissions[i] = source->permissions[i];
+			}
+			
 		} else {
 			dest = inodes[number-1];
 			parent = parent_dest;
 		}
 		
 		//copy the inode's informations
-		
-		strcpy(dest->permissions, source->permissions);
+
+		//strcpy(dest->permissions, source->permissions);
 		
 		dest-> date_modification = time(NULL);
 		
@@ -145,18 +149,22 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 		}
 		
 		if(source->nb_data_blocks > 1) { // source file has more data blocks than the destination
-			dest->nb_data_blocks = source->nb_data_blocks;
-			int* reallocation = realloc(dest->data_blocks, dest->nb_data_blocks); 
+			int* reallocation = realloc(dest->data_blocks, source->nb_data_blocks); 
 			if(reallocation == NULL) { // the realloc hasn't worked
 				printf("Error while creating the new file.\n");
 				remove_tab_index(dest,parent,disk);
 				free_inode(disk,dest);
 				return;
 			}
+			int offset = source->nb_data_blocks - dest->nb_data_blocks;
+			for(j=offset;j<source->nb_data_blocks;j++) {
+				dest->data_blocks[j] = allocation_block_data();
+				dest->data_blocks[j] = source->data_blocks[j];
+			}
+			dest->nb_data_blocks = source->nb_data_blocks;
 		}
+		
 		for(j=0;j<dest->nb_data_blocks;j++) {
-			//dest->data_blocks[j] = allocation_block_data();
-			//dest->data_blocks[j] = source->data_blocks[j];
 			for(k=0;k<source->data_blocks[j]->size;k++){ //write the new data
 				dest->data_blocks[j]->data[k] = source->data_blocks[j]->data[k];
 			}
@@ -193,8 +201,9 @@ void myrm(Inode* inode,Inode* parent_inode,Disk* disk){
 
 char* myread(Inode* inode, char* output) {
 	int i;
+
 	for(i=0;i<inode->nb_data_blocks;i++) {
-		strcat(output, inode->data_blocks[i]->data);
+		sprintf(output, "%s", inode->data_blocks[i]->data);
 	}
 	return output;
 }
@@ -206,7 +215,7 @@ void mywrite(Inode* inode,char* output,Disk* disk) {
 	int available = BUFFER_SIZE-size;
 	
 	if(available > strlen(output)) { // any other data block is needed
-		strcat(inode->data_blocks[id_last_tab]->data, output);
+		sprintf(inode->data_blocks[id_last_tab]->data, "%s", output);
 		inode->data_blocks[id_last_tab]->size = strlen(inode->data_blocks[id_last_tab]->data);
 		int str_size = inode->data_blocks[id_last_tab]->size;
 		inode->data_blocks[id_last_tab]->data[str_size] = '\0';
