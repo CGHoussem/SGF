@@ -12,8 +12,8 @@ typedef struct Inode Inode;
 typedef struct Disk Disk;
 
 struct Index {
-	char name[MAX_FILE_NAME];
-	Inode* inode;
+	char name[MAX_FILE_NAME]; // name of the index
+	Inode* inode; // inode pointed by the index
 };
 
 enum Block_type {
@@ -22,35 +22,35 @@ enum Block_type {
 };
 
 struct Directory_block {
-	Directory_block* prev_block;
-	Directory_block* next_block;
+	Directory_block* prev_block; // previous block in a list
+	Directory_block* next_block; // next block in a list
 	
-	Index* tab_index;
-	int nb_index;
+	Index* tab_index; // array of indexes
+	int nb_index; // number of indexes
 };
 
 struct Data_block {
-	Data_block* prev_block;
-	Data_block* next_block;
+	Data_block* prev_block; // previous block in a list
+	Data_block* next_block; // next block in a list
 
-	char data[BUFFER_SIZE];
-	int size;
+	char data[BUFFER_SIZE]; // content of the data block
+	int size; // number of chars contained in data
 };
 
 struct Inode {
-	char name[MAX_FILE_NAME];
+	char name[MAX_FILE_NAME]; // name of the file
 	char permissions[10]; // rwxr--r--
 	int type; // 1 = text, 2 = binary, 3 = directory
-	time_t date_creation;
-	time_t date_modification;
-	Directory_block* dir_blocks;
-	Data_block** data_blocks;
+	time_t date_creation; // date of creation
+	time_t date_modification; // last date of modification
+	Directory_block* dir_blocks; // directory block associated
+	Data_block** data_blocks; // array of data blocks allocated for this inode
 	
-	int nb_data_blocks;
-	int nb_links;
+	int nb_data_blocks; // number of data blocks allocated for this inode
+	int nb_links; // number of symbolic links related to this inode
 	
-	Inode* prev_inode;
-	Inode* next_inode;
+	Inode* prev_inode; // previous inode in a list
+	Inode* next_inode; // next inode in a list
 };
 
 struct Disk {

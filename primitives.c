@@ -9,13 +9,6 @@
 #include "save_load_SGF.h"
 #include "constants.h"
 
-/*
-cat : pour concaténer des fichiers (peut display mais aussi rediriger)
-ln : pour créer un lien symbolique entre deux fichiers
-echo “texte” > file : pour écrire dans un fichier
-*/
-//TODO vérifier que le disque ne soit pas complet avant d'ajouter
-
 void mymkdir(char* name,Disk* disk,Inode* current_inode){
 	Inode* inode = NULL;
 	
@@ -60,7 +53,6 @@ void mycreate(char* name,Disk* disk,Inode* current_inode){
 	inode->date_creation=time(NULL);
 	inode->date_modification=time(NULL);
 	
-	//inode->nb_data_blocks = 1;
 	inode->data_blocks = allocation_tab_block_data(1);
 
 	inode->nb_data_blocks = 1;
@@ -133,13 +125,9 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 		}
 		
 		//copy the inode's informations
-
-		//strcpy(dest->permissions, source->permissions);
 		
 		dest-> date_modification = time(NULL);
-		
-		//dest->nb_data_blocks = source->nb_data_blocks;
-				
+						
 		for(j=0;j<dest->nb_data_blocks;j++) {	
 			if(dest->data_blocks[j]->size != 0) {
 				for(k=0;k<dest->data_blocks[j]->size;k++){ //delete the old data
@@ -169,8 +157,6 @@ void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
 				dest->data_blocks[j]->data[k] = source->data_blocks[j]->data[k];
 			}
 		}
-
-		//dest->data_blocks = source->data_blocks;
 	}
 }		
 
@@ -181,8 +167,6 @@ void mycd (Inode *inode,Inode **current_inode){
 void mymv(Inode** inodes,Inode** parent_inode,int number,Disk* disk){
     
     int i;
-	//Inode* source = NULL;
-	//Inode* dest = NULL;
 	
 	mycp(inodes,parent_inode[number-1],number,disk);
 	for(i=0;i<number-1;i++) {
@@ -305,7 +289,7 @@ void mychmod(Inode** inodes,int number,char permissions[9],Disk* disk){
 }
 
 void mydf(Disk* disk) {
-	int available = DISK_BYTES_LIMIT-(disk->nb_data_blocks*1024);
+	int available = DISK_BYTES_LIMIT-(disk->nb_data_blocks*BUFFER_SIZE);
 	
 	printf("\n#### Informations about your disk : ####\n\n");
 	printf("Number of used inodes : %d\n", disk->nb_inode);

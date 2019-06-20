@@ -1,6 +1,7 @@
 #ifndef COMMAND_SHELL
 #define COMMAND_SHELL
 
+#include <stdbool.h>
 #include "constants.h"
 #include "struct_SGF.h"
 
@@ -30,5 +31,21 @@ int count_path(char** parsedInput);
 void free_input(char* input,char** parsedInput);
 //converts the rights input into an array representing the rights
 char* convertRights(char* rights, int length, char permissions[10]);
+// checks if the disk is filled or not
+bool isDiskFilled(Disk* disk, int size);
+// functions handling each command
+int handleCd(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
+int handleLn(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Inode** inodes_input,Disk* disk);
+int handleDf(char* input, char** parsedInput,Disk* disk);
+int handleChmod(char* input, char** parsedInput,Inode** current_inode,Inode** inodes_input,Disk* disk);
+int handleEcho(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
+int handleCat(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
+int handleRmdir(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Disk* disk);
+int handleRm(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Disk* disk);
+int handleMv(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Inode** inodes_input,Disk* disk);
+int handleCp(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Inode** inodes_input,Disk* disk);
+int handleTouch(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
+int handleLs(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
+int handleMkdir(char* input, char** parsedInput,Inode** current_inode,Disk* disk);
 
 #endif
