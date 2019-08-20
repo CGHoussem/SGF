@@ -15,7 +15,27 @@ char* readline(){
         input[pos++] = c;
     }
     input[pos] = '\0';
+
+	input = ltrim(input);
+
     return input;
+}
+
+char* ltrim(char* untrimmed_str){
+	int i = 0, j = 0;
+	int length = strlen(untrimmed_str);
+
+	for (; untrimmed_str[i]==' ' || untrimmed_str[i] == '\t'; i++);
+
+	char* trimmed_str = (char*) malloc(sizeof(char) * length-i);
+
+	while(untrimmed_str[i] != '\0'){
+		trimmed_str[j] = untrimmed_str[i];
+		i++;
+		j++;
+	}
+	
+	return trimmed_str;
 }
 
 char** parse(char* input){
