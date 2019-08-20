@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 #include "command_shell.h"
 #include "primitives.h"
 #include "save_load_SGF.h"
@@ -93,8 +94,10 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		
 		return handleLn(input, parsedInput, current_inode, inode, inodes_input, disk);
     
-    } else if (strcmp(input, "help") == 0){
-        printf("Available commands: ls, touch, cp, mv, cd, rm, rmdir, cat, echo, chmod, df, ln, exit\n");
+    } else if (strcmp(input, "man") == 0){
+		return handleMan(input, parsedInput);
+	} else if (strcmp(input, "help") == 0){
+        printf("Available commands: ls, touch, cp, mv, cd, rm, rmdir, cat, echo, chmod, df, ln, clear, man, exit\n");
         free_input(input,parsedInput);
         return 1;
    
@@ -1045,4 +1048,67 @@ int handleMkdir(char* input, char** parsedInput,Inode** current_inode,Disk* disk
 	
 	free_input(input,parsedInput);
 	return 1;
+}
+
+int handleMan(char* input, char** parsedInput){
+	int nbr_args = nb_arguments(parsedInput);
+	if (nbr_args == 0){
+		printf("What manual page do you want?\n");
+	} else {
+		for (int i = 1; i <= nbr_args; i++) {
+			int ret = print_manual(parsedInput[i]);
+
+			if (ret == -1){
+				printf(BOLDRED "No manual entry for %s\n" RESET, parsedInput[i]);
+				continue;
+			}
+			printf(HIGHTLIGHT "Press enter to go to the next command or leave" RESET);
+
+			char c;
+			scanf("%c", &c);
+			system("clear");
+		}
+	}
+
+	return 1;
+}
+
+int print_manual(char* command){
+	if (strcmp(command, "ln") == 0){
+		printf("In the 1st forn create a link to TARGET with the name LINK_NAME. In the 2nd form, create a link to TARGET in the current directory. In the 3rd and the 4th forms, create links to each TARGET in DIRECTORY. Create hard links by default, symbolic links with " BOLDWHITE "--symbolic" RESET ".");
+	} else if (strcmp(command, "df") == 0){
+		printf("This manual page documents the GNU version of " BOLDWHITE "df" RESET ". " BOLDWHITE "df" RESET " displays the amount of disk space available on the file system containing each file name argument. If no file name is given, the space available on all currently moounted file systems is shown...\n");
+	} else if (strcmp(command, "chmod") == 0){
+		printf("This manual page documents the GNU version of " BOLDWHITE "chmod" RESET ". " BOLDWHITE "chmod" RESET " changes the file mode bits of each given file according to mode, which can be either symbolic representation of changes to make, or an octal number representing the bit pattern of the new mode bits..\n");
+	} else if (strcmp(command, "echo") == 0){
+		printf("Echo the STRING(s) to standard output.\n");
+	} else if (strcmp(command, "cat") == 0){
+		printf("Concatenante FILE(s) to standard output.\n");
+	} else if (strcmp(command, "rmdir") == 0){
+		printf("Remove the DIRECTORY(ies), if they are empty.\n");
+	} else if (strcmp(command, "rm") == 0){
+		printf("This manual page documents the GNU version of " BOLDWHITE "rm" RESET ". " BOLDWHITE "rm" RESET " removes each specified file. By default, it does not remove directories.\n");
+	} else if (strcmp(command, "mv") == 0){
+		printf("Rename SOURCE to DEST, or move SOURCE(s) to DIRECTORY.\n");
+	} else if (strcmp(command, "cp") == 0){
+		printf("Copy SOURCE to DEST, or multiple SOURCE(s) to DIRECTORY.\n");
+	} else if (strcmp(command, "touch") == 0){
+		printf("Update the access and modification times of each FILE to the current time.\n");
+	} else if (strcmp(command, "ls") == 0){
+		printf("List information about the FILEs (the current directory by default). Sort entries alphabetically if none of -cftuvSUX nor --sort is specified.");
+	} else if (strcmp(command, "mkdir") == 0){
+		printf("Create the DIRECTORY(ies), if they do not already exist.\n");
+	} else if (strcmp(command, "man") == 0){
+		printf(BOLDWHITE "man" RESET " is the system's manual pager. Each page argument givent to " BOLDWHITE "man" RESET " is the normally the name of a program, utility or function.\n");
+	} else if (strcmp(command, "exit") == 0){
+		printf("The exit() function causes normal process termination and the value of status & 0377 is returned to the parent.\n");
+	} else
+		return -1;
+	return 0;
+}
+
+int nb_arguments(char** parsedInput){
+	int counter = -1;
+	while (parsedInput[++counter] != NULL);
+	return counter - 1;
 }

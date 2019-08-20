@@ -33,6 +33,10 @@ void free_input(char* input,char** parsedInput);
 char* convertRights(char* rights, int length, char permissions[10]);
 // checks if the disk is filled or not
 bool isDiskFilled(Disk* disk, int size);
+// returns the number of arguments passed
+int nb_arguments(char** parsedInput);
+// prints out the manual page of a specific command
+int print_manual(char* command);
 // functions handling each command
 int handleCd(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
 int handleLn(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Inode** inodes_input,Disk* disk);
@@ -47,5 +51,5 @@ int handleCp(char* input, char** parsedInput,Inode** current_inode,Inode** inode
 int handleTouch(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
 int handleLs(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
 int handleMkdir(char* input, char** parsedInput,Inode** current_inode,Disk* disk);
-
+int handleMan(char* input, char** parsedInput);
 #endif
