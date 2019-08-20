@@ -139,29 +139,31 @@ int save_index(int index_index, int db_index, Index index){
 	return 0;
 }
 
-int save_inode_data_blocks(int inode_index, Data_block* blocks){
+int save_inode_data_blocks(int inode_index, Data_block** blocks, int size_blocks){
 	if (blocks != NULL){
 		FILE* f = NULL;
 		char* filename = (char*) malloc(sizeof(char) * 23);
 
-		Data_block* current = blocks;
-		int sum = 0;
-		while (current != NULL){
-			sprintf(filename, "tmp/datablocks%dI%d.tmp", (++sum), inode_index);
-			f = fopen(filename, "wb+");
-			if (f == NULL){
-				free(filename);
-				return 1;
+		for (int i = 0 ; i < size_blocks; i++){
+			Data_block* current = blocks[i];
+			int sum = 0;
+			while (current != NULL){
+				sprintf(filename, "tmp/datablocks%d_%dI%d.tmp", i, (++sum), inode_index);
+				f = fopen(filename, "wb+");
+				if (f == NULL){
+					free(filename);
+					return 1;
+				}
+				fwrite(&current->data, sizeof(char)*BUFFER_SIZE, 1, f);
+				fwrite(&current->size, sizeof(int), 1, f);
+				current = current->next_block;
 			}
-			fwrite(&current->data, sizeof(char)*BUFFER_SIZE, 1, f);
-			fwrite(&current->size, sizeof(int), 1, f);
-			current = current->next_block;
+			#if (DEBUG_MODE==1)
+			printf("saved %d data blocks[%d] of inode %d\n", sum, i, inode_index);
+			#endif
+			fclose(f);
+			free(filename);
 		}
-		#if (DEBUG_MODE==1)
-		printf("saved %d data blocks of inode %d\n", sum, inode_index);
-		#endif
-		fclose(f);
-		free(filename);
 	}
 	return 0;
 }
@@ -455,9 +457,9 @@ int save_inodes(Inode* inodes){
 		fprintf(f, "%d\n", current->nb_dir_blocks);
 		fprintf(f, "%d\n", current->nb_data_blocks);
 		
-		save_inode_dir_blocks(current->index, current->dir_blocks);
+		//save_inode_dir_blocks(current->index, current->dir_blocks);
 		// TODO: save_inode_data_blocks needs to be changed!
-		//save_inode_data_blocks(sum, current->data_blocks);
+		save_inode_data_blocks(sum, current->data_blocks, current->nb_data_blocks);
 		current = current->next_inode;
 		sum++;
 	}
@@ -534,17 +536,17 @@ int save_disk(Disk* disk){
 	}
 
 	// save dir blocks
-	if (disk->dir_blocks != NULL && save_dir_blocks(disk->dir_blocks) == 1){
+	/*if (disk->dir_blocks != NULL && save_dir_blocks(disk->dir_blocks) == 1){
 		printf("Error saving the directory blocks of the disk!\n");
 		return 0;
-	}
+	}*/
 	
 	// TODO: save_data_blocks going to be changed!
 	// save data blocks
-	//if (disk.data_blocks != NULL && save_data_blocks(disk.data_blocks) == 1){
-	//	printf("Error saving the data blocks of the disk!\n");
-	//	return 0;
-	//}
+	if (disk->data_blocks != NULL && save_data_blocks(disk->data_blocks) == 1){
+		printf("Error saving the data blocks of the disk!\n");
+		return 0;
+	}
 
 	return 1;
 }
@@ -632,21 +634,21 @@ int load_disk(Disk* disk){
 		return 0;
 	}
 	// load the dir blocks
-	disk->dir_blocks = NULL;
+	/*disk->dir_blocks = NULL;
 	if (load_dir_blocks(disk, &disk->dir_blocks, disk->nb_dir_blocks) == 1){
 		printf("The loading of the disk dir_blocks has failed!\n");
 		return 0;
-	}
+	}*/
 
 	// TODO: load_data_blocks going to be changed!
 	// load the data blocks
-	//if (file_exists("datablocks1.tmp")){
-	//	disk->data_blocks = NULL;
-	//	if (load_data_blocks(&disk->data_blocks, disk->nb_data_blocks) ==1){
-	//		printf("The loading of the disk data_blocks has failed!\n");
-	//		return 0;
-	//	}
-	//}
+	if (file_exists("datablocks1.tmp")){
+		disk->data_blocks = NULL;
+		if (load_data_blocks(&disk->data_blocks, disk->nb_data_blocks) ==1){
+			printf("The loading of the disk data_blocks has failed!\n");
+			return 0;
+		}
+	}
 
 	// Cleaning related-disk files
 	system("rm -r -f tmp");
