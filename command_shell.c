@@ -35,7 +35,12 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 	Inode* inode = NULL;
 	Inode** inode_and_parent = NULL;
     char** parsedInput = parse(input);
-        
+    
+	// if the user pressed on the RETURN button without typing any input
+	if (strlen(input) == 0){
+		return 1;
+	}
+
     if (strcmp(input, "mkdir") == 0){
 		
 		return handleMkdir(input, parsedInput, current_inode, disk);
