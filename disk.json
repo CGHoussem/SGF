@@ -1,0 +1,57 @@
+{
+    "inode_0": {
+        "uid": 0,
+        "name": "root",
+        "permissions": "rwxrw-r--",
+        "type": 3,
+        "creation_date": 1598891825,
+        "modification_date": 1598891825,
+        "dirblock": [
+            {
+                "name": ".",
+                "inode_uid": 0
+            },
+            {
+                "name": "..",
+                "inode_uid": 0
+            },
+            {
+                "name": "f",
+                "inode_uid": 1
+            },
+            {
+                "name": "dossier",
+                "inode_uid": 2
+            }
+        ]
+    },
+    "inode_1": {
+        "uid": 1,
+        "name": "f",
+        "permissions": "rwxrw-r--",
+        "type": 1,
+        "creation_date": 1598891826,
+        "modification_date": 1598891826,
+        "datablock": [
+            "hi "
+        ]
+    },
+    "inode_2": {
+        "uid": 2,
+        "name": "dossier",
+        "permissions": "rwxrw-r--",
+        "type": 3,
+        "creation_date": 1598953183,
+        "modification_date": 1598953183,
+        "dirblock": [
+            {
+                "name": ".",
+                "inode_uid": 2
+            },
+            {
+                "name": "..",
+                "inode_uid": 0
+            }
+        ]
+    }
+}

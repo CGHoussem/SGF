@@ -5,47 +5,50 @@
 #include <unistd.h>
 #include "command_shell.h"
 #include "primitives.h"
-#include "save_load_SGF.h"
+#include "utility.h"
 
 char* readline(){ 
     char* input = malloc(sizeof(char) * SHELL_BUFFER_SIZE);
     int pos = 0;
     char c;
+	
     while ((c = getchar()) != '\n' && c != EOF){
         input[pos++] = c;
     }
     input[pos] = '\0';
 
-	input = ltrim(input);
+	input = ltrim(input, NULL);
 
     return input;
 }
 
-char* ltrim(char* untrimmed_str){
-	int i = 0, j = 0;
-	int length = strlen(untrimmed_str);
+char* ltrim(char* str, const char* seps){
 
-	for (; untrimmed_str[i]==' ' || untrimmed_str[i] == '\t'; i++);
-
-	char* trimmed_str = (char*) malloc(sizeof(char) * length-i);
-
-	while(untrimmed_str[i] != '\0'){
-		trimmed_str[j] = untrimmed_str[i];
-		i++;
-		j++;
-	}
-	
-	return trimmed_str;
+	size_t totrim;
+    if (seps == NULL) {
+        seps = "\t\n\v\f\r ";
+    }
+    totrim = strspn(str, seps);
+    if (totrim > 0) {
+        size_t len = strlen(str);
+        if (totrim == len) {
+            str[0] = '\0';
+        }
+        else {
+            memmove(str, str + totrim, len + 1 - totrim);
+        }
+    }
+    return str;
 }
 
 char** parse(char* input){
     int i = 0;
     char** args = malloc(sizeof(char*) * SHELL_BUFFER_SIZE);
-    const char* space = " ";
-    char* arg = strtok(input, space);
+    // const char* space = " ";
+    char* arg = strtok(input, " ");
     while (arg != NULL){
         args[i++] = arg;
-        arg = strtok(NULL, space);
+        arg = strtok(NULL, " ");
     }
     args[i] = NULL;
     return args;
@@ -61,77 +64,48 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 	if (strlen(input) == 0){
 		return 1;
 	}
-
     if (strcmp(input, "mkdir") == 0){
-		
 		return handleMkdir(input, parsedInput, current_inode, disk);
-    
     } else if (strcmp(input, "ls") == 0){
-		
 		return handleLs(input, parsedInput, current_inode, inode, disk);
-    
     } else if (strcmp(input, "touch") == 0){
-
 		return handleTouch(input, parsedInput, current_inode, inode, disk);
-    
     } else if (strcmp(input, "cp") == 0){
-		
 		return handleCp(input, parsedInput, current_inode, inode_and_parent, inodes_input, disk);
-		
     } else if (strcmp(input, "mv") == 0){
-		
 		return handleMv(input, parsedInput, current_inode, inode_and_parent, inodes_input, disk);
-    
     } else if (strcmp(input, "cd") == 0){
-		
 		return handleCd(input, parsedInput, current_inode, inode, disk);
-		
     } else if (strcmp(input, "rm") ==0){
-		
 		return handleRm(input, parsedInput, current_inode, inode_and_parent, disk);
-    
     } else if (strcmp(input, "rmdir") == 0){
-		
 		return handleRmdir(input, parsedInput, current_inode, inode_and_parent, disk);
-	
 	} else if (strcmp(input, "cat") == 0){
-        
         return handleCat(input, parsedInput, current_inode, inode, disk);
-	
 	} else if (strcmp(input, "echo") == 0){
-        
         return handleEcho(input, parsedInput, current_inode, inode, disk); 
-	
 	} else if (strcmp(input, "chmod") == 0){
-		
         return handleChmod(input, parsedInput, current_inode, inodes_input, disk);
-    
     } else if (strcmp(input, "df") == 0){
-
 		return handleDf(input, parsedInput,disk);
-		
 	} else if (strcmp(input, "ln") == 0){
-		
 		return handleLn(input, parsedInput, current_inode, inode, inodes_input, disk);
-    
     } else if (strcmp(input, "man") == 0){
 		return handleMan(input, parsedInput);
 	} else if (strcmp(input, "help") == 0){
         printf(BOLDWHITE"Available commands:"RESET" ls, touch, cp, mv, cd, rm, rmdir, cat, echo, chmod, df, ln, clear, man, exit\n");
-        free_input(input,parsedInput);
+        free_input(input, parsedInput);
         return 1;
-   
     } else if (strcmp(input, "exit") == 0){
-		free_input(input,parsedInput);
+		free_input(input, parsedInput);
         return 0;
-        
 	} else if(strcmp(input, "clear") == 0) {
 		system("clear");
+		free_input(input, parsedInput);
 		return 1;
-    
     } else {
         printf("%s: command not found\n", input);
-        free_input(input,parsedInput);
+        free_input(input, parsedInput);
         return 1;
     }
 }
@@ -203,7 +177,7 @@ Inode* path_to_inode(char* parsedInput,Inode* current_inode,Disk* disk){
 	}
 	
 	for(file_name = strtok(parsedInput,"/");file_name != NULL;file_name = strtok(NULL,"/")){
-		inode = search_file_in_directory(file_name,inode->dir_blocks);
+		inode = search_file_in_directory(file_name,inode->dirblock);
 		if(inode == NULL) { //file doesn't exist
 			return NULL;
 		}
@@ -228,7 +202,7 @@ Inode* path_to_destination(char* parsedInput,Inode* current_inode,Disk* disk){
 	
 	for(file_name = strtok(parsedInput,"/");file_name != NULL;file_name = strtok(NULL,"/")){
 		inode = next_inode;
-		next_inode = search_file_in_directory(file_name,inode->dir_blocks);
+		next_inode = search_file_in_directory(file_name,inode->dirblock);
 		if(next_inode == NULL && create == 0) {
 			mycreate(file_name,disk,inode);
 			inode_create = get_last_inode(*disk);
@@ -238,7 +212,7 @@ Inode* path_to_destination(char* parsedInput,Inode* current_inode,Disk* disk){
 		} else if(next_inode == NULL && create == 1) {
 			printf("Error: Destination path doesn't exist \n");
 			remove_tab_index(inode_create,parent_inode_create,disk);
-			free_inode(disk,inode_create);
+			free_inode(inode_create);
 			return NULL;
 		}	
 	}
@@ -261,7 +235,7 @@ Inode* path_to_destination_directory(char* parsedInput,Inode* current_inode,Disk
 	
 	for(file_name = strtok(parsedInput,"/");file_name != NULL;file_name = strtok(NULL,"/")){
 		inode = next_inode;
-		next_inode = search_file_in_directory(file_name,inode->dir_blocks);
+		next_inode = search_file_in_directory(file_name,inode->dirblock);
 		if(next_inode == NULL && create == 0) {
 			mymkdir(file_name,disk,inode);
 			inode_create = get_last_inode(*disk);
@@ -269,9 +243,9 @@ Inode* path_to_destination_directory(char* parsedInput,Inode* current_inode,Disk
 			next_inode = inode_create;
 			create = 1;
 		} else if(next_inode == NULL && create == 1) {
-			printf("Error: Path doesn't exist \n");
+			printf("Error: Path doesn't exist\n");
 			remove_tab_index(inode_create,parent_inode_create,disk);
-			free_inode(disk,inode_create);
+			free_inode(inode_create);
 			return NULL;
 		}	
 	}
@@ -296,11 +270,11 @@ Inode* path_to_last_directory(char* parsedInput,Inode* current_inode,Disk* disk,
 	for(file_name = strtok(parsedInput,"/");file_name != NULL;file_name = strtok(NULL,"/")){
 		strcpy(name_link,file_name);
 		inode = next_inode;
-		next_inode = search_file_in_directory(file_name,inode->dir_blocks);
+		next_inode = search_file_in_directory(file_name,inode->dirblock);
 		if(next_inode == NULL && not_found == 0) {
 			not_found = 1;
 		} else if(next_inode == NULL && not_found == 1) {
-			printf("Error: Path doesn't exist \n");;
+			printf("Error: Path doesn't exist \n");
 			return NULL;
 		}	
 	}
@@ -332,12 +306,12 @@ Inode** path_to_inode_and_parent_inode(char* parsedInput,Inode* current_inode,Di
 	for(file_name = strtok(parsedInput,"/");file_name != NULL;file_name = strtok(NULL,"/")){
 		inode = next_inode;
 		if(inode != NULL) {
-			next_inode = search_file_in_directory(file_name,inode->dir_blocks);
+			next_inode = search_file_in_directory(file_name,inode->dirblock);
 		}
 		if(next_inode == NULL && not_found == 0) {
 			not_found = 1;
 		} else if(next_inode == NULL && not_found == 1) {
-			printf("Error: Path doesn't exist \n");;
+			printf(BOLDRED"ERROR: Path doesn't exist\n"RESET);
 			res[0] = NULL;
 			res[1] = NULL;
 			return res;
@@ -368,10 +342,10 @@ Inode** path_to_destination_and_parent(char* parsedInput,Inode* current_inode,Di
 		inode = current_inode;
 		next_inode = current_inode;
 	}
-	
+		
 	for(file_name = strtok(parsedInput,"/");file_name != NULL;file_name = strtok(NULL,"/")){
 		inode = next_inode;
-		next_inode = search_file_in_directory(file_name,inode->dir_blocks);
+		next_inode = search_file_in_directory(file_name,inode->dirblock);
 		if(next_inode == NULL && create == 0) {
 			mycreate(file_name,disk,inode);
 			inode_create = get_last_inode(*disk);
@@ -379,9 +353,9 @@ Inode** path_to_destination_and_parent(char* parsedInput,Inode* current_inode,Di
 			next_inode = inode_create;
 			create = 1;
 		} else if(next_inode == NULL && create == 1) {
-			printf("Error: Destination path doesn't exist \n");
+			perror(BOLDRED"ERROR: Destination path doesn't exist\n"RESET);
 			remove_tab_index(inode_create,parent_inode_create,disk);
-			free_inode(disk,inode_create);
+			free_inode(inode_create);
 			res[0] = NULL;
 			res[1] = NULL;
 			return res;
@@ -407,13 +381,13 @@ int count_path(char** parsedInput) {
 	return nb_arg;
 }
 
-void free_input(char* input,char** parsedInput) {
+void free_input(char* input, char** parsedInput) {
 	free(input);
 	free(parsedInput);
 }
 
 bool isDiskFilled(Disk* disk, int size) {
-	return ((DISK_BYTES_LIMIT-(disk->nb_data_blocks*BUFFER_SIZE)-size) >= BUFFER_SIZE);
+	return ((DISK_BYTES_LIMIT-(count_disk_datablocks(*disk)*BUFFER_SIZE)-size) >= BUFFER_SIZE);
 }
 
 int handleCd(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk) {
@@ -422,12 +396,12 @@ int handleCd(char* input, char** parsedInput,Inode** current_inode,Inode* inode,
 		if(inode != NULL && inode->type == DIRECTORY) {
 			mycd(inode, current_inode);
 		} else {
-			printf("Error : directory doesn't exist \n");
+			printf("Error: directory doesn't exist\n");
 		}
 	} else {
 		printf("Missing input \n");
 	}
-	free_input(input,parsedInput);
+	free_input(input, parsedInput);
 	return 1;
 }
 
@@ -437,8 +411,8 @@ int handleLn(char* input, char** parsedInput,Inode** current_inode,Inode* inode,
 
 	nb_arg = count_path(parsedInput);
 	if(nb_arg < 1) {
-		printf("Error: Missing file input \n");
-		free_input(input,parsedInput);
+		printf("Error: Missing file input\n");
+		free_input(input, parsedInput);
 		return 1;
 	}
 
@@ -461,7 +435,7 @@ int handleLn(char* input, char** parsedInput,Inode** current_inode,Inode* inode,
 	myln(inodes_input,*current_inode,nb_arg,disk,name_link);
 	
 	free(inodes_input);
-	free_input(input,parsedInput);
+	free_input(input, parsedInput);
 	return 1;
 }
 
@@ -470,7 +444,7 @@ int handleDf(char* input, char** parsedInput,Disk* disk) {
 	
 	if(nb_arg > 0) {
 		printf("df doesn't require arguments\n");
-		free_input(input,parsedInput);
+		free_input(input, parsedInput);
 		return 1;
 	}
 	
@@ -484,7 +458,7 @@ int handleChmod(char* input, char** parsedInput,Inode** current_inode,Inode** in
         
 	if(nb_arg < 2) {
 		printf("Missing input(s) \n");
-		free_input(input,parsedInput);
+		free_input(input, parsedInput);
 		return 1;
 	}
 	
@@ -493,7 +467,7 @@ int handleChmod(char* input, char** parsedInput,Inode** current_inode,Inode** in
 	// verifying that the given input is in the right range
 	if(length < 1 || length > 3) {
 		printf("Rights input is incorrect\n");
-		free_input(input,parsedInput);
+		free_input(input, parsedInput);
 		return 1;
 	}
 
@@ -506,13 +480,13 @@ int handleChmod(char* input, char** parsedInput,Inode** current_inode,Inode** in
 		{
 			if(digit == 8 || digit == 9) {	
 				printf("Rights input is incorrect\n");
-				free_input(input,parsedInput);
+				free_input(input, parsedInput);
 				return 1;
 			}
 		}
 		else {
 			printf("Rights input is incorrect\n");
-			free_input(input,parsedInput);
+			free_input(input, parsedInput);
 			return 1;
 		}
 	}
@@ -528,7 +502,7 @@ int handleChmod(char* input, char** parsedInput,Inode** current_inode,Inode** in
 			inodes_input[cpt] = path_to_inode(parsedInput[i],*current_inode,disk);
 			if(inodes_input[cpt] == NULL) {
 				printf("Error: argument %d is not an existing file/directory \n",(cpt+2));
-				free_input(input,parsedInput);
+				free_input(input, parsedInput);
 				free(inodes_input);
 				return 1;
 			}
@@ -540,7 +514,7 @@ int handleChmod(char* input, char** parsedInput,Inode** current_inode,Inode** in
 	char permissions[10];
 	mychmod(inodes_input,nb_arg-1,convertRights(parsedInput[1], length, permissions),disk);
 	free(inodes_input);
-	free_input(input,parsedInput);
+	free_input(input, parsedInput);
 	return 1;
 	
 	return 1;
@@ -550,8 +524,8 @@ int handleEcho(char* input, char** parsedInput,Inode** current_inode,Inode* inod
 	int i,j,nb_arg = count_path(parsedInput);
 	
 	if(nb_arg < 1) {
-		printf("Error : missing inputs \n");
-		free_input(input,parsedInput);
+		printf("Error: missing inputs\n");
+		free_input(input, parsedInput);
 		return 1;
 	}
 	
@@ -563,8 +537,8 @@ int handleEcho(char* input, char** parsedInput,Inode** current_inode,Inode* inod
 	
 	// checks if quotes are opened but not closed
 	if(nb_quotes%2 != 0) {
-		printf("Error : you have entered %d quotes, 1 missing quote\n", nb_quotes);
-		free_input(input,parsedInput);
+		printf(BOLDRED"Error: you have entered %d quotes, 1 missing quote"RESET"\n", nb_quotes);
+		free_input(input, parsedInput);
 		return 1;
 	}
 	
@@ -576,8 +550,8 @@ int handleEcho(char* input, char** parsedInput,Inode** current_inode,Inode* inod
 		{
 			// verifying if there's a file after the redirection
 			if(i == nb_arg) {
-				printf("Error : missing file input \n");
-				free_input(input,parsedInput);
+				printf(BOLDRED"Error: missing file input"RESET"\n");
+				free_input(input, parsedInput);
 				return 1;
 			}
 			redirectionIndex = i;
@@ -595,10 +569,9 @@ int handleEcho(char* input, char** parsedInput,Inode** current_inode,Inode* inod
 			printf(" ");
 		}
 		printf("\n");
-		free_input(input,parsedInput);
+		free_input(input, parsedInput);
 		return 1;
 	}
-	
 	
 	char output[MAX_INPUT_SIZE] = "";
 	int taille_totale;
@@ -611,8 +584,8 @@ int handleEcho(char* input, char** parsedInput,Inode** current_inode,Inode* inod
 					output[strlen(output)] = parsedInput[i][j];
 				}
 				else {
-					printf("Error : size of the input is too high\n");
-					free_input(input,parsedInput);
+					printf(BOLDRED"Error: size of the input is too high\n"RESET);
+					free_input(input, parsedInput);
 					return 1;
 				}
 		}
@@ -629,8 +602,8 @@ int handleEcho(char* input, char** parsedInput,Inode** current_inode,Inode* inod
 						output[strlen(output)] = parsedInput[i][j];
 				}
 				else {
-					printf("Error : size of the input is too high\n");
-					free_input(input,parsedInput);
+					printf(BOLDRED"Error: size of the input is too high\n"RESET);
+					free_input(input, parsedInput);
 					return 1;
 				}
 			}
@@ -643,23 +616,23 @@ int handleEcho(char* input, char** parsedInput,Inode** current_inode,Inode* inod
 	if(inode == NULL) {
 		inode = path_to_destination(parsedInput[redirectionIndex+1],*current_inode,disk);
 		if(inode == NULL) {
-			printf("Error at argument %d \n",i);
-			free_input(input,parsedInput);
+			printf(BOLDRED"Error at argument %d \n"RESET,i);
+			free_input(input, parsedInput);
 			return 1;
 				
 		} else {
-			inode->date_modification = time(NULL);
+			inode->modification_date = time(NULL);
 			mywrite(inode,output,disk);
 		}
 	} 
 	else if(inode->type != TEXT) {
-		printf("Error: argument %d is not a file \n",i);
+		printf(BOLDRED"Error: argument %d is not a file \n"RESET,i);
 	}
 	else {
 		mywrite(inode,output,disk);
 	}
 	
-	free_input(input,parsedInput);
+	free_input(input, parsedInput);
 	return 1;
 }
 
@@ -668,8 +641,8 @@ int handleCat(char* input, char** parsedInput,Inode** current_inode,Inode* inode
 	int nb_arg = count_path(parsedInput);
 	
 	if(nb_arg < 1) {
-		printf("Error : missing input \n");
-		free_input(input,parsedInput);
+		fprintf(stderr, BOLDRED"Error: missing input"RESET"\n");
+		free_input(input, parsedInput);
 		return 1;
 	}
 	
@@ -679,8 +652,8 @@ int handleCat(char* input, char** parsedInput,Inode** current_inode,Inode* inode
 		{
 			// verifying if there's a file after the redirection
 			if(i == nb_arg || strcmp(parsedInput[i+1], "cat") == 0) {
-				printf("Error : missing or bad file input \n");
-				free_input(input,parsedInput);
+				printf(BOLDRED"Error: missing or bad file input"RESET"\n");
+				free_input(input, parsedInput);
 				return 1;
 			}
 			redirectionIndex = i;
@@ -694,23 +667,22 @@ int handleCat(char* input, char** parsedInput,Inode** current_inode,Inode* inode
 		for(i=1;i<=nb_arg;i++) {
 			inode = path_to_inode(parsedInput[i],*current_inode,disk);
 			if(inode == NULL) {
-				printf("Error: argument %d is not an existing file \n",i);
+				fprintf(stderr, BOLDRED"Error: argument %d is not an existing file"RESET"\n",i);
 			} 
 			else if(inode->type != TEXT) {
-				printf("Error: argument %d is not a file \n",i);
+				fprintf(stderr, BOLDRED"Error: argument %d is not a file"RESET"\n",i);
 			}
-			else {
-				char* output;
-				output = (char*) malloc(BUFFER_SIZE*inode->nb_data_blocks*sizeof(char));
-				printf("%s\n", myread(inode, output));
+			else if (inode->datablocks != NULL){
+				char* output = myread(inode);
+				printf("%s\n", output);
 				free(output);
 			}
 		}
-		free_input(input,parsedInput);
+		free_input(input, parsedInput);
 		return 1;
 	}
 	
-	int content_inode_size = 0;
+	// int content_inode_size = 0;
 	char content_inodes[MAX_REDIRECTION_SIZE] = "";
 	content_inodes[0] = '\0';
 
@@ -718,21 +690,20 @@ int handleCat(char* input, char** parsedInput,Inode** current_inode,Inode* inode
 	for(i=1;i<redirectionIndex;i++) {
 		inode = path_to_inode(parsedInput[i],*current_inode,disk);
 		if(inode == NULL) {
-			printf("Error: argument %d is not an existing file \n",i);
-			free_input(input,parsedInput);
+			fprintf(stderr, BOLDRED"ERROR: The file '%s' does not exist!"RESET"\n", parsedInput[i]);
+			free_input(input, parsedInput);
 			return 1;
 		} 
 		else if(inode->type != TEXT) {
-			printf("Error: argument %d is not a file \n",i);
-			free_input(input,parsedInput);
+			fprintf(stderr, BOLDRED"ERROR: '%s' is not a file!"RESET"\n", parsedInput[i]);
+			free_input(input, parsedInput);
 			return 1;
 		}
 		else {
-			char* content_inode;
-			content_inode_size = BUFFER_SIZE*inode->nb_data_blocks;
-			content_inode = (char*) malloc(content_inode_size*sizeof(char));
-			content_inode = myread(inode, content_inode);
+			char* content_inode = NULL;
+			content_inode = myread(inode);
 			strcat(content_inodes, content_inode);
+			free(content_inode);
 		}
 	}
 	
@@ -742,25 +713,24 @@ int handleCat(char* input, char** parsedInput,Inode** current_inode,Inode* inode
 			for(i=1;i<redirectionIndex;i++) {
 				inode = path_to_inode(parsedInput[i],*current_inode,disk);
 				if(inode == NULL) {
-					printf("Error: argument %d is not an existing file \n",i);
-					free_input(input,parsedInput);
+					fprintf(stderr, BOLDRED"ERROR: The file '%s' does not exist!"RESET"\n", parsedInput[i]);
+					free_input(input, parsedInput);
 					return 1;
 				} 
 				else if(inode->type != TEXT) {
-					printf("Error: argument %d is not a file \n",i);
-					free_input(input,parsedInput);
+					fprintf(stderr, BOLDRED"ERROR: '%s' is not a file!"RESET"\n", parsedInput[i]);
+					free_input(input, parsedInput);
 					return 1;
 				}
 				else {
-					char* content_inode;
-					content_inode_size = BUFFER_SIZE*inode->nb_data_blocks;
-					content_inode = (char*) malloc(content_inode_size*sizeof(char));
-					content_inode = myread(inode, content_inode);
+					char* content_inode = NULL;
+					content_inode = myread(inode);
 					strcat(content_inodes, content_inode);
+					free(content_inode);
 				}
 			}
 		}
-	}		
+	}
 			
 	inode = path_to_inode(parsedInput[redirectionIndex+1],*current_inode,disk);
 	
@@ -768,23 +738,23 @@ int handleCat(char* input, char** parsedInput,Inode** current_inode,Inode* inode
 	if(inode == NULL) {
 		inode = path_to_destination(parsedInput[redirectionIndex+1],*current_inode,disk);
 		if(inode == NULL) {
-			printf("Error at argument %d \n",i);
-			free_input(input,parsedInput);
+			fprintf(stderr, BOLDRED"Error at argument %d"RESET"\n", i);
+			free_input(input, parsedInput);
 			return 1;
 				
 		} else {
-			inode->date_modification = time(NULL);
-			mywrite(inode,content_inodes,disk);
+			inode->modification_date = time(NULL);
+			//mywrite(inode,content_inodes,disk);
 		}
 	} 
 	else if(inode->type != TEXT) {
-		printf("Error: argument %d is not a file \n",i);
+		fprintf(stderr, BOLDRED"ERROR: '%s' is not a file!"RESET"\n", inode->name);
 	}
 	else {
-		mywrite(inode,content_inodes,disk);
+		//mywrite(inode,content_inodes,disk);
 	}
 			
-	free_input(input,parsedInput);
+	free_input(input, parsedInput);
 	return 1;
 }
 
@@ -792,8 +762,8 @@ int handleRmdir(char* input, char** parsedInput,Inode** current_inode,Inode** in
 	int i, nb_arg = count_path(parsedInput);
 	
 	if(nb_arg < 1) {
-		printf("Missing directory input \n");
-		free_input(input,parsedInput);
+		perror(BOLDRED"ERROR: Missing directory input!"RESET"\n");
+		free_input(input, parsedInput);
 		return 1;
 	}
 	
@@ -803,16 +773,16 @@ int handleRmdir(char* input, char** parsedInput,Inode** current_inode,Inode** in
 		if(parsedInput[i][0] != '-') {
 			inode_and_parent = path_to_inode_and_parent_inode(parsedInput[i],*current_inode,disk);
 			if(inode_and_parent[0] == NULL) {
-				printf("Error: argument %d is not an existing directory \n",i);
+				fprintf(stderr, BOLDRED"ERROR: The directory '%s' does not exist!"RESET"\n", parsedInput[i]);
 			} 
 			else if(inode_and_parent[0]->type != DIRECTORY) {
-				printf("Error: argument %d is not a directory \n",i);
+				fprintf(stderr, BOLDRED"ERROR: '%s' is not a directory!"RESET"\n", parsedInput[i]);
 			}
-			else if(inode_and_parent[0]->dir_blocks->nb_index > 2) {
-				printf("Error: argument %d is not an empty directory \n",i);
+			else if(inode_and_parent[0]->dirblock->nb_index > 2) {
+				fprintf(stderr, BOLDRED"ERROR: The directory '%s' is not empty!"RESET"\n", parsedInput[i]);
 			}
 			else if(inode_and_parent[0] == *current_inode) {
-				printf("Error: cannot delete the current directory \n");
+				perror(BOLDRED"ERROR: Cannot delete the current directory"RESET"\n");
 			}
 			else {
 				myrm(inode_and_parent[0],inode_and_parent[1],disk);
@@ -822,7 +792,7 @@ int handleRmdir(char* input, char** parsedInput,Inode** current_inode,Inode** in
 		i++;
 	}
 	
-	free_input(input,parsedInput);
+	free_input(input, parsedInput);
 	return 1;	
 }
 
@@ -830,8 +800,8 @@ int handleRm(char* input, char** parsedInput,Inode** current_inode,Inode** inode
 	int i,nb_arg = count_path(parsedInput);
 	
 	if(nb_arg < 1) {
-		printf("Missing file input \n");
-		free_input(input,parsedInput);
+		perror(BOLDRED"ERROR: Missing file input!"RESET"\n");
+		free_input(input, parsedInput);
 		return 1;
 	}
 	
@@ -841,10 +811,10 @@ int handleRm(char* input, char** parsedInput,Inode** current_inode,Inode** inode
 		if(parsedInput[i][0] != '-') {
 			inode_and_parent = path_to_inode_and_parent_inode(parsedInput[i],*current_inode,disk);
 			if(inode_and_parent[0] == NULL) {
-				printf("Error: argument %d is not an existing file \n",i);
+				fprintf(stderr, BOLDRED"ERROR: the file '%s' does not exist!"RESET"\n", parsedInput[i]);
 			} 
 			else if(inode_and_parent[0]->type == DIRECTORY) {
-				printf("Error: argument %d is a directory \n",i);
+				fprintf(stderr, BOLDRED"ERROR: '%s' is a directory!"RESET"\n", parsedInput[i]);
 			} 
 			else {
 				myrm(inode_and_parent[0],inode_and_parent[1],disk);
@@ -854,17 +824,18 @@ int handleRm(char* input, char** parsedInput,Inode** current_inode,Inode** inode
 		i++;
 	}
 	
-	free_input(input,parsedInput);
+	free_input(input, parsedInput);
 	return 1;
 }
 
 int handleMv(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Inode** inodes_input,Disk* disk) {
 	int i,cpt,nb_arg = count_path(parsedInput);
 	Inode** parent_inodes_input = NULL;
+	char failure = 0;
 	
 	if(nb_arg < 2) {
-		printf("Missing file input \n");
-		free_input(input,parsedInput);
+		perror(BOLDRED"ERROR: Missing file input"RESET"\n");
+		free_input(input, parsedInput);
 		return 1;
 	}
 
@@ -875,58 +846,71 @@ int handleMv(char* input, char** parsedInput,Inode** current_inode,Inode** inode
 	cpt = 0;
 
 	while(parsedInput[i] != NULL) {
-		if(parsedInput[i][0] != '-') {
-			if(cpt == nb_arg-1) { //destination file
+		if(parsedInput[i][0] != '-') { // if it's not a command option
+			if(cpt == nb_arg-1) { // destination file/folder
 				inode_and_parent = path_to_destination_and_parent(parsedInput[i],*current_inode,disk);
 				inodes_input[cpt] = inode_and_parent[0];
 				parent_inodes_input[cpt] = inode_and_parent[1];
-				if(inodes_input[cpt] == NULL) { //destination file doesn't exist
-					free(inodes_input);
-					free(parent_inodes_input);
-					free(inode_and_parent);
-					free_input(input,parsedInput);
-					return 1;
+				if(inodes_input[cpt] == NULL) { //destination file/folder doesn't exist
+					perror(BOLDRED"ERROR: Destination file/folder doesn't exist\n"RESET);
+					failure = 1;
 				}
 				if(nb_arg != 2 && (inodes_input[cpt])->type != DIRECTORY) {
-					printf("Error: More than a file to move into a file \n");
+					perror(BOLDRED"ERROR: More than a file to move into a file\n"RESET);
 					remove_tab_index(inodes_input[cpt],parent_inodes_input[cpt],disk);
-					free_inode(disk,inodes_input[cpt]);
+					free_inode(inodes_input[cpt]);
+					failure = 1;
+				} 
+				if (failure == 1)
+				{
+					free(inodes_input[0]);
+					free(inodes_input[1]);
 					free(inodes_input);
 					free(parent_inodes_input);
+					free(inode_and_parent[0]);
+					free(inode_and_parent[1]);
 					free(inode_and_parent);
-					free_input(input,parsedInput);
+					free_input(input, parsedInput);
 					return 1;
-				} 
+				}
 			} else { //source file
 				inode_and_parent = path_to_inode_and_parent_inode(parsedInput[i],*current_inode,disk);
 				inodes_input[cpt] = inode_and_parent[0];
 				parent_inodes_input[cpt] = inode_and_parent[1];
 				if(inodes_input[cpt] == NULL) {
-					printf("Error: argument %d is not an existing file \n",(cpt+1));
-					free_input(input,parsedInput);
-					free(inodes_input);
-					free(parent_inodes_input);
-					free(inode_and_parent);
-					return 1;
+					fprintf(stderr, BOLDRED"ERROR: the file '%s' doest not exist!\n"RESET, parsedInput[i]);
+					failure = 1;
 				}else if(inodes_input[cpt]->type == DIRECTORY) {
-					printf("Error: argument %d is a directory \n",(cpt+1));
-					free_input(input,parsedInput);
+					fprintf(stderr, BOLDRED"ERROR: '%s' is a directory!\n"RESET, parsedInput[i]);
+					failure = 1;
+				}
+				if (failure == 1)
+				{
+					free(inodes_input[0]);
+					free(inodes_input[1]);
 					free(inodes_input);
 					free(parent_inodes_input);
+					free(inode_and_parent[0]);
+					free(inode_and_parent[1]);
 					free(inode_and_parent);
+					free_input(input, parsedInput);
 					return 1;
 				}
 			}
 			cpt++;
+			free(inode_and_parent[0]);
+			free(inode_and_parent[1]);
 			free(inode_and_parent);
 		}
 		i++;
 	}
 
-	mymv(inodes_input,parent_inodes_input,nb_arg,disk);
+	mymv(inodes_input,parent_inodes_input,nb_arg-1,disk);
+	free(inodes_input[0]);
+	free(inodes_input[1]);
 	free(inodes_input);
 	free(parent_inodes_input);
-	free_input(input,parsedInput);
+	free_input(input, parsedInput);
 	return 1;
 }
 
@@ -935,7 +919,7 @@ int handleCp(char* input, char** parsedInput,Inode** current_inode,Inode** inode
 	
 	if(nb_arg < 2) {
 		printf("Missing file input \n");
-		free_input(input,parsedInput);
+		free_input(input, parsedInput);
 		return 1;
 	}
 	
@@ -944,6 +928,7 @@ int handleCp(char* input, char** parsedInput,Inode** current_inode,Inode** inode
 	i = 1;
 	cpt = 0;
 	
+	// Verification and preparation
 	while(parsedInput[i] != NULL) {
 		if(parsedInput[i][0] != '-') {
 			if(cpt == nb_arg-1) { //destination file
@@ -951,27 +936,27 @@ int handleCp(char* input, char** parsedInput,Inode** current_inode,Inode** inode
 				inodes_input[cpt] = inode_and_parent[0];
 				if(inodes_input[cpt] == NULL) { //destination file doesn't exist
 					free(inodes_input);
-					free_input(input,parsedInput);
+					free_input(input, parsedInput);
 					return 1;
 				}
 				if(nb_arg != 2 && (inodes_input[cpt])->type != DIRECTORY) {
 					printf("Error: More than a file to copy into a file \n");
 					remove_tab_index(inodes_input[cpt],inode_and_parent[1],disk);
-					free_inode(disk,inodes_input[cpt]);
+					free_inode(inodes_input[cpt]);
 					free(inodes_input);
-					free_input(input,parsedInput);
+					free_input(input, parsedInput);
 					return 1;
 				}
 			} else { //source file
 				inodes_input[cpt] = path_to_inode(parsedInput[i],*current_inode,disk);
 				if(inodes_input[cpt] == NULL) {
-					printf("Error: argument %d is not an existing file \n",(cpt+1));
-					free_input(input,parsedInput);
+					printf(BOLDRED"ERROR: file '%s' does not exist!\n"RESET, parsedInput[i]);
+					free_input(input, parsedInput);
 					free(inodes_input);
 					return 1;
 				}else if(inodes_input[cpt]->type == DIRECTORY) {
-					printf("Error: argument %d is a directory \n",(cpt+1));
-					free_input(input,parsedInput);
+					printf(BOLDRED"ERROR: '%s' is a directory!\n"RESET, parsedInput[i]);
+					free_input(input, parsedInput);
 					free(inodes_input);
 					return 1;
 				}
@@ -980,10 +965,10 @@ int handleCp(char* input, char** parsedInput,Inode** current_inode,Inode** inode
 		}
 		i++;
 	}
-	mycp(inodes_input,inode_and_parent[1],nb_arg,disk);
+	//mycp(inodes_input,inode_and_parent[1],nb_arg,disk);
 	free(inode_and_parent);
 	free(inodes_input);
-	free_input(input,parsedInput);
+	free_input(input, parsedInput);
 	return 1;
 }
 
@@ -992,7 +977,7 @@ int handleTouch(char* input, char** parsedInput,Inode** current_inode,Inode* ino
 	
 	if(nb_arg < 1) {
 		printf("Missing file input \n");
-		free_input(input,parsedInput);
+		free_input(input, parsedInput);
 		return 1;
 	}
 	
@@ -1003,13 +988,13 @@ int handleTouch(char* input, char** parsedInput,Inode** current_inode,Inode* ino
 			if(inode == NULL) {
 				printf("Error at argument %d \n",i);
 			} else {
-				inode->date_modification = time(NULL);
+				inode->modification_date = time(NULL);
 			}
 		}
 		i++;
 	}
 	
-	free_input(input,parsedInput);
+	free_input(input, parsedInput);
 	return 1;
 
 }
@@ -1018,10 +1003,10 @@ int handleLs(char* input, char** parsedInput,Inode** current_inode,Inode* inode,
 	int i,j,nb_arg = count_path(parsedInput);
 	
 	if(nb_arg < 1) {
-		for(j=0;j<(*current_inode)->dir_blocks->nb_index;j++) {
-			myls((*current_inode)->dir_blocks->tab_index[j].inode,(*current_inode)->dir_blocks->tab_index[j].name);
+		for(j=0;j<(*current_inode)->dirblock->nb_index;j++) {
+			myls((*current_inode)->dirblock->tab_index[j].inode,(*current_inode)->dirblock->tab_index[j].name);
 		}
-		free_input(input,parsedInput);
+		free_input(input, parsedInput);
 		return 1;
 	}
 	
@@ -1035,14 +1020,14 @@ int handleLs(char* input, char** parsedInput,Inode** current_inode,Inode* inode,
 				myls(inode,NULL);
 			} else { // informations will be shown
 				printf("%s : \n",inode->name);
-				for(j=0;j<inode->dir_blocks->nb_index;j++) {
-					myls(inode->dir_blocks->tab_index[j].inode,inode->dir_blocks->tab_index[j].name);
+				for(j=0;j<inode->dirblock->nb_index;j++) {
+					myls(inode->dirblock->tab_index[j].inode,inode->dirblock->tab_index[j].name);
 				}
 			}
 		}
 		i++;
 	}
-	free_input(input,parsedInput);
+	free_input(input, parsedInput);
 	return 1;
 }
 
@@ -1050,8 +1035,8 @@ int handleMkdir(char* input, char** parsedInput,Inode** current_inode,Disk* disk
 	int i,nb_arg = count_path(parsedInput);
 	
 	if(nb_arg < 1) {
-		printf("Missing file input \n");
-		free_input(input,parsedInput);
+		printf("Missing file input\n");
+		free_input(input, parsedInput);
 		return 1;
 	}
 	
@@ -1066,7 +1051,7 @@ int handleMkdir(char* input, char** parsedInput,Inode** current_inode,Disk* disk
 		i++;
 	}
 	
-	free_input(input,parsedInput);
+	free_input(input, parsedInput);
 	return 1;
 }
 

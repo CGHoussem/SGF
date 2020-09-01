@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -g
-OBJS = utility.o save_load.o primitives.o command_shell.o main.o
+CFLAGS = -Wall -Werror -g
+OBJS = utility.o parson.o save_load.o primitives.o command_shell.o main.o
 
 all: program
 
@@ -12,6 +12,9 @@ main.o: main.c
 
 utility.o: utility.c utility.h
 	$(CC) $(CFLAGS) -c -o utility.o utility.c
+
+parson.o: parson.c parson.h
+	$(CC) $(CFLAGS) -c -o parson.o parson.c
 
 save_load.o: save_load.c save_load.h
 	$(CC) $(CFLAGS) -c -o save_load.o save_load.c

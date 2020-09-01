@@ -6,73 +6,82 @@
 #include "struct_SGF.h"
 #include "primitives.h"
 #include "command_shell.h"
-#include "save_load_SGF.h"
+#include "utility.h"
 #include "constants.h"
 
-void mymkdir(char* name,Disk* disk,Inode* current_inode){
-	Inode* inode = NULL;
-	
-	inode = (Inode*)malloc(sizeof(Inode));
-	
+void mymkdir(char* name, Disk* disk, Inode* current_inode){
+	Inode* inode = (Inode*) malloc(sizeof(Inode));
+
+	inode->uid = count_inodes(*disk);
 	strcpy(inode->name, name);
-	
 	init_permissions(inode->permissions);
 	inode->type=DIRECTORY; 
-	inode->date_creation=time(NULL);
-	inode->date_modification=time(NULL);
-	
-	inode->data_blocks = NULL;
-	inode->dir_blocks = allocation_block_directory();
-	
-	inode->nb_data_blocks = 0;
-	inode->nb_links = 1;
+	inode->creation_date=time(NULL);
+	inode->modification_date=time(NULL);
+
+	inode->datablocks = NULL;
+	inode->dirblock = allocation_block_directory();
 
 	inode->next_inode = NULL;
 	
 	if(current_inode == NULL){ //root
-		init_block_directory(inode->dir_blocks,inode,inode,disk);
+		init_block_directory(inode->dirblock, inode, inode, disk);
 	}
-	else{
-		init_block_directory(inode->dir_blocks,inode,current_inode,disk);
+	else {
+		init_block_directory(inode->dirblock,inode,current_inode,disk);
 		update_tab_index(current_inode,inode);
 	}
 	
 	add_inode(inode,disk);
-	
 }
 
 void mycreate(char* name,Disk* disk,Inode* current_inode){
-    Inode* inode = NULL;
+    Inode* inode = malloc(sizeof(Inode));
 	
-	inode = (Inode*)malloc(sizeof(Inode));
-	
+	// Deleting uneeded chars from the name
+	// char* temp_temp = name;
+	// char* temp_name = malloc(sizeof(char) * strlen(name));
+	// int i = 0;
+	// while (*name != '\0')
+	// {
+	// 	if (
+	// 		(*name >= 32 && *name <= 90) || 
+	// 		(*name >= 97 && *name <= 122) || 
+	// 		*name == '.' || 
+	// 		*name == '-' || 
+	// 		*name == '*' || 
+	// 		*name == '_'
+	// 	)
+	// 	{
+	// 		*(temp_name+i) = *name;
+	// 		i++;
+	// 	}
+	// 	name++;
+	// }
+	// printf(BOLDBLUE"true name: %s\n"RESET, temp_name);
+	// free(temp_name);
+
+	inode->uid = count_inodes(*disk);
 	strcpy(inode->name, name);
 	
 	init_permissions(inode->permissions);
 	inode->type=TEXT; 
-	inode->date_creation=time(NULL);
-	inode->date_modification=time(NULL);
+	inode->creation_date=time(NULL);
+	inode->modification_date=time(NULL);
 	
-	inode->data_blocks = allocation_tab_block_data(1);
-
-	inode->nb_data_blocks = 1;
-	inode->dir_blocks = NULL;
-	
-	inode->nb_links = 1;
+	//inode->datablocks = allocation_tab_block_data(1);
+	inode->datablocks = NULL;
+	inode->dirblock = NULL;
 
 	inode->next_inode = NULL;
 	
-	init_block_data(inode->data_blocks[inode->nb_data_blocks-1],disk);
-	update_tab_index(current_inode,inode);
-		
+	update_tab_index(current_inode,inode);	
 	add_inode(inode,disk);
-	
 }
 
 void myls(Inode* current_inode,char* name_index) {
 	char file_type[MAX_FILE_NAME];
-	char* file_name;
-	
+	char* file_name = NULL;
 	
 	if(name_index == NULL) {
 		file_name = current_inode->name;
@@ -94,183 +103,151 @@ void myls(Inode* current_inode,char* name_index) {
 			strcpy(file_type," ");
 			break;
 	}
-	printf("%s -> file type : %s, rights : %s\n",file_name, 
-	file_type, current_inode->permissions);
-
+	printf("%s -> file type: %s, rights: %s\n", file_name, file_type, current_inode->permissions);
 }
-
-void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
-	int i,j,k;
-	Inode* source = NULL;
-	Inode* dest = NULL;
-	Inode* parent = NULL;
-	
-	for(i=0;i<number-1;i++) {
-		source = inodes[i];
-		
-		if((inodes[number-1])->type == DIRECTORY){ //search destination
-			dest = search_file_in_directory(source->name,(inodes[number-1])->dir_blocks);
-			if(dest == NULL) { //file doesn't exist
-				mycreate(source->name,disk,inodes[number-1]);
-				dest = get_last_inode(*disk);
-				parent = inodes[number-1];
-			}
-			for(j=0;j<10;j++) {
-				dest->permissions[j] = source->permissions[j];
-			}
-			
-		} else {
-			dest = inodes[number-1];
-			parent = parent_dest;
-		}
-		
-		//copy the inode's informations
-		
-		dest-> date_modification = time(NULL);
-						
-		for(j=0;j<dest->nb_data_blocks;j++) {	
-			if(dest->data_blocks[j]->size != 0) {
-				for(k=0;k<dest->data_blocks[j]->size;k++){ //delete the old data
-					dest->data_blocks[j]->data[k] = 0;
-				}
-			}
-		}
-		
-		if(source->nb_data_blocks > dest->nb_data_blocks) { // source file has more data blocks than the destination
-			int* reallocation = realloc(dest->data_blocks, source->nb_data_blocks); 
-			if(reallocation == NULL) { // the realloc hasn't worked
-				printf("Error while creating the new file.\n");
-				remove_tab_index(dest,parent,disk);
-				free_inode(disk,dest);
-				return;
-			}
-			int offset = source->nb_data_blocks - dest->nb_data_blocks;
-			for(j=offset;j<source->nb_data_blocks;j++) {
-				dest->data_blocks[j] = allocation_block_data();
-				dest->data_blocks[j] = source->data_blocks[j];
-			}
-			dest->nb_data_blocks = source->nb_data_blocks;
-		}
-		
-		for(j=0;j<dest->nb_data_blocks;j++) {
-			for(k=0;k<source->data_blocks[j]->size;k++){ //write the new data
-				dest->data_blocks[j]->data[k] = source->data_blocks[j]->data[k];
-			}
-		}
-	}
-}		
 
 void mycd (Inode *inode,Inode **current_inode){
 	*current_inode = inode;
 }
 
+// void mycp2(Inode* file, Inode* dest_parent, Disk* disk)
+// {
+// 	Inode* destination = search_file_in_directory(file->name, );
+// }
+
+// void mycp(Inode** inodes,Inode* parent_dest,int number,Disk* disk){
+// 	int i,j,k;
+// 	Inode* source = NULL;
+// 	Inode* dest = NULL;
+// 	Inode* parent = NULL;
+
+// 	for(i=0;i<number-1;i++) {
+// 		source = inodes[i];
+		
+// 		if((inodes[number-1])->type == DIRECTORY){ //search destination
+// 			dest = search_file_in_directory(source->name,(inodes[number-1])->dir_blocks);
+// 			if(dest == NULL) { //file doesn't exist
+// 				mycreate(source->name,disk,inodes[number-1]);
+// 				dest = get_last_inode(*disk);
+// 				parent = inodes[number-1];
+// 			}
+// 			for(j=0;j<10;j++) {
+// 				dest->permissions[j] = source->permissions[j];
+// 			}
+			
+// 		} else {
+// 			dest = inodes[number-1];
+// 			parent = parent_dest;
+// 		}
+		
+// 		//copy the inode's informations
+// 		dest-> date_modification = time(NULL);
+		
+// 		dest->data_blocks = allocation_block_data();
+// 		dest->data_blocks->prev_block = NULL;
+// 		// for(j=0;j<dest->nb_data_blocks;j++) {	
+// 		// 	if(dest->data_blocks[j]->size != 0) {
+// 		// 		for(k=0;k<dest->data_blocks[j]->size;k++){ //delete the old data
+// 		// 			dest->data_blocks[j]->data[k] = 0;
+// 		// 		}
+// 		// 	}
+// 		// }
+		
+// 		if(source->nb_data_blocks > dest->nb_data_blocks) { // source file has more data blocks than the destination
+// 			int* reallocation = realloc(dest->data_blocks, source->nb_data_blocks); 
+// 			if(reallocation == NULL) { // the realloc hasn't worked
+// 				printf("Error while creating the new file.\n");
+// 				remove_tab_index(dest,parent,disk);
+// 				free_inode(disk,dest);
+// 				return;
+// 			}
+// 			int offset = source->nb_data_blocks - dest->nb_data_blocks;
+// 			for(j=offset;j<source->nb_data_blocks;j++) {
+// 				dest->data_blocks[j] = allocation_block_data();
+// 				dest->data_blocks[j] = source->data_blocks[j];
+// 			}
+// 			dest->nb_data_blocks = source->nb_data_blocks;
+// 		}
+		
+// 		Data_block* tempDest = dest->data_blocks;
+// 		Data_block* tempSrc = source->data_blocks; 
+// 		while (tempDest != NULL && tempSrc != NULL)
+// 		{
+// 			strcpy(tempDest->data, tempDest->data);
+// 			tempSrc = tempSrc->next_block;
+// 			tempDest = tempDest->next_block;
+// 		}
+// 		// for(j=0;j<dest->nb_data_blocks;j++) {
+// 		// 	for(k=0;k<source->data_blocks[j]->size;k++){ //write the new data
+// 		// 		dest->data_blocks[j]->data[k] = source->data_blocks[j]->data[k];
+// 		// 	}
+// 		// }
+// 	}
+// }
+
 void mymv(Inode** inodes,Inode** parent_inode,int number,Disk* disk){
-    
-    int i;
-	
-	mycp(inodes,parent_inode[number-1],number,disk);
-	for(i=0;i<number-1;i++) {
-		myrm(inodes[i],parent_inode[i],disk);
-	}
+
+	printf(BOLDBLUE"Moving ...\n"RESET);
+	for (int i = 0; i < number+1; i++)
+		printf(BOLDBLUE"Inode: %s\nparent_inode: %s\n"RESET, inodes[i]->name, parent_inode[number]->name);
+
+	//mycp(inodes,parent_inode[number],number,disk);
+	// for(int i=0;i<number;i++) {
+	// 	myrm(inodes[i],parent_inode[i],disk);
+	// }
 }
 
 void myrm(Inode* inode,Inode* parent_inode,Disk* disk){
-	remove_tab_index(inode,parent_inode,disk);
-	inode->nb_links--;
-	if(inode->nb_links == 0) {
-		free_inode(disk,inode);
-	}
-	
+	remove_tab_index(inode,parent_inode,disk);	
 }
 
-char* myread(Inode* inode, char* output) {
-	int i;
+char* myread(Inode* inode) {
+	char* output = malloc(BUFFER_SIZE*count_inode_datablocks(inode)*sizeof(char));
+	output[0] = '\0';
 
-	for(i=0;i<inode->nb_data_blocks;i++) {
-		sprintf(output, "%s", inode->data_blocks[i]->data);
+	DataBlock* temp = inode->datablocks;
+	while (temp != NULL)
+	{
+		strcat(output, temp->data);
+		temp = temp->next_block;
 	}
 	return output;
 }
 
 void mywrite(Inode* inode,char* output,Disk* disk) {
-	
-	int id_last_tab = inode->nb_data_blocks-1;
-	int size = inode->data_blocks[id_last_tab]->size;
-	int available = BUFFER_SIZE-size;
-	
-	if(available > strlen(output)) { // any other data block is needed
-		sprintf(inode->data_blocks[id_last_tab]->data, "%s", output);
-		inode->data_blocks[id_last_tab]->size = strlen(inode->data_blocks[id_last_tab]->data);
-		int str_size = inode->data_blocks[id_last_tab]->size;
-		inode->data_blocks[id_last_tab]->data[str_size] = '\0';
+	if (inode->datablocks == NULL){
+		inode->datablocks = init_datablock();
 	}
-	else { //we have to create another or many other data block(s)
-		inode->date_modification = time(NULL);
-		inode->nb_data_blocks++;
-		int* reallocation = realloc(inode->data_blocks, inode->nb_data_blocks); 
-		if(reallocation == NULL) { // the realloc hasn't worked
-			printf("Error while giving a new data block.\n");
-			inode->nb_data_blocks--;
-			return;
+	DataBlock* db = inode->datablocks;
+	if (strlen(output) > BUFFER_SIZE) {
+		int blocks_to_allocate = strlen(output) / BUFFER_SIZE;
+		if (strlen(output) % BUFFER_SIZE > 1)
+			blocks_to_allocate++;
+	
+		for (int i = 0; i < blocks_to_allocate-1; i++)
+		{
+			char* string = substring(output, -1 + i*BUFFER_SIZE, BUFFER_SIZE);
+			sprintf(db->data, "%s", string);
+			if (db->next_block == NULL){
+				db->next_block = allocation_block_data();
+				db->next_block->prev_block = db;
+			}
+			db = db->next_block;
 		}
-			
-		int i, position_output=0;
-		// Completing the last data block
-		for(i=size;i<BUFFER_SIZE;i++) {
-			inode->data_blocks[id_last_tab]->data[i] = output[position_output];
-			position_output++;
-		}
-		
-		int offset = strlen(output)-available; // number of chars remaining
-		int nb_realloc = inode->nb_data_blocks+1;
-		
-		if(offset < BUFFER_SIZE) { // The new data block will be sufficient
-			// Writing in the new data block
-			int* reallocation = realloc(inode->data_blocks, nb_realloc); 
-			if(reallocation == NULL) { // the realloc hasn't worked
-				printf("Error while allocating the new data block.\n");
-				return;
-			}
-			inode->nb_data_blocks++;
-			id_last_tab++;
-			for(i=0;i<offset;i++) {
-				inode->data_blocks[id_last_tab]->data[i] = output[position_output];
-				position_output++;
-			}
-			
-		} else { // The rest of the output requires another data block
-			int extra = (int)round(strlen(output)/BUFFER_SIZE);
-			nb_realloc += extra;
-			
-			// Writing in the new data blocks
-			int* reallocation = realloc(inode->data_blocks, nb_realloc); 
-			if(reallocation == NULL) { // the realloc hasn't worked
-				printf("Error while allocating the new data blocks.\n");
-				return;
-			}
-			inode->nb_data_blocks = nb_realloc;
-			while(id_last_tab < nb_realloc-1) {
-				for(i=0;i<BUFFER_SIZE;i++) {
-					inode->data_blocks[id_last_tab]->data[i] = output[position_output];
-					position_output++;
-				}
-				id_last_tab++;
-			}
-			
-			// Completing the last data block
-			id_last_tab++;
-			int remaining_length = strlen(output)-position_output;
-			for(i=0;i<remaining_length;i++) {
-				inode->data_blocks[id_last_tab]->data[i] = output[position_output];
-				position_output++;
-			}
-		}
+
+		char* string = substring(output, -1 + BUFFER_SIZE*(blocks_to_allocate-1), strlen(output)-BUFFER_SIZE*(blocks_to_allocate-1));
+		strcpy(db->data, string);
+		printf("written!\n");
+	} else {
+		strcpy(db->data, output);
+		printf("written!\n");
 	}
 }
 
+
 void mychmod(Inode** inodes,int number,char permissions[9],Disk* disk){
 	int i;
-	for(i=0;i<number;i++) {
+	for(i=0;i<number;i++) {	
 		if(inodes[i] != NULL) { //file does exist
 			inodes[i]->permissions[0] = permissions[0];
 			inodes[i]->permissions[1] = permissions[1];
@@ -289,18 +266,18 @@ void mychmod(Inode** inodes,int number,char permissions[9],Disk* disk){
 }
 
 void mydf(Disk* disk) {
-	int available = DISK_BYTES_LIMIT-(disk->nb_data_blocks*BUFFER_SIZE);
+	unsigned int nb_datablocks = count_disk_datablocks(*disk);
+	int available = DISK_BYTES_LIMIT-(nb_datablocks*BUFFER_SIZE);
 	
 	printf("\n#### Informations about your disk : ####\n\n");
-	printf("Number of used inodes : %d\n", disk->nb_inode);
-	printf("Number of used data blocks : %d\n", disk->nb_data_blocks);
-	printf("Number of used directory blocks : %d\n", disk->nb_dir_blocks);
+	printf("Number of used inodes : %d\n", count_inodes(*disk));
+	printf("Number of used data blocks : %d\n", nb_datablocks);
+	printf("Number of used directory blocks : %d\n", count_disk_dirblocks(*disk));
 	printf("Available space on the disk :  %d bytes\n\n", available);
 }
 
 void myln(Inode** inodes,Inode* current_inode,int nb_arg, Disk* disk,char name_link[MAX_FILE_NAME]){
 	int i,nb_index;
-	
 	
 	if (nb_arg == 1 && inodes[0] != NULL){ //add in the current directory an index associated with this inode without changing the name of the file.
 		update_tab_index(current_inode,inodes[0]);
@@ -315,19 +292,16 @@ void myln(Inode** inodes,Inode* current_inode,int nb_arg, Disk* disk,char name_l
 			} else {
 				update_tab_index(inodes[nb_arg-1],inodes[i]);
 				if(strcmp(name_link,"\0") != 0) {
-					nb_index = inodes[nb_arg-1]->dir_blocks->nb_index;
-					strcpy(inodes[nb_arg-1]->dir_blocks->tab_index[nb_index-1].name,name_link);
+					nb_index = inodes[nb_arg-1]->dirblock->nb_index;
+					strcpy(inodes[nb_arg-1]->dirblock->tab_index[nb_index-1].name,name_link);
 				}
-				inodes[i]->nb_links++;
+				// TODO to look into the number of links
+				// inodes[i]->nb_links++;
 			}
 		}
 	} else if (nb_arg == 2 && inodes[nb_arg-1] != NULL && inodes[nb_arg-1]->type != DIRECTORY) {
 		printf("Impossible to link, the argument 2 already exist \n");
 	} 
-		
-	
-	
-	
 	/*else if(nbr_inode==2){ //create a symbolic link (once again, an index) of the first inode given, and will give the name of the second one to the created index.
 		update_tab_index(current_inode,inode[0]);
 		Inode* tmp=inode[0];

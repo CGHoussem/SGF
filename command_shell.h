@@ -8,7 +8,7 @@
 char* readline();
 char** parse(char* input);
 // trims the string from the left
-char* ltrim(char* untrimmed_str);
+char* ltrim(char* str, const char* seps);
 int executeLine(Disk* disk, char* input,Inode** current_inode);
 //return the inode associated with the given path, NULL if the path doesn't exist
 Inode* path_to_inode(char* parsedInput,Inode* current_inode,Disk* disk); 
@@ -30,7 +30,7 @@ Inode** path_to_destination_and_parent(char* parsedInput,Inode* current_inode,Di
 //count the number of path in parsedInput
 int count_path(char** parsedInput);
 //free the input
-void free_input(char* input,char** parsedInput);
+void free_input(char* input, char** parsedInput);
 //converts the rights input into an array representing the rights
 char* convertRights(char* rights, int length, char permissions[10]);
 // checks if the disk is filled or not
