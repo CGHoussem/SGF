@@ -5,11 +5,10 @@
 #include "struct_SGF.h"
 #include "primitives.h"
 #include "command_shell.h"
-#include "save_load_SGF.h"
+#include "utility.h"
 #include "constants.h"
 
 void format_disk(Disk* disk){
-	
 	disk->inodes = NULL;
 	disk->dir_blocks = NULL;
 	disk->data_blocks = NULL;
@@ -20,35 +19,7 @@ void format_disk(Disk* disk){
 	
 	mymkdir("root",disk,NULL);
 
-	printf("The disk has been successfully formatted!\n");
-}
-
-int save_disk(Disk disk){
-	FILE *file = fopen(DISK_FILE_NAME, "wb");
-
-	if (file == NULL){
-		printf("File '%s' couldn't be opened!\n", DISK_FILE_NAME);
-		return 0;
-	}
-
-	if (fwrite(&disk, sizeof(Disk), 1, file) <= 0)
-		return 0;
-		
-	fclose(file);
-	return 1;
-}
-
-int load_disk(Disk* disk){
-	FILE *file = fopen(DISK_FILE_NAME, "rb");
-	if (file == NULL){
-		printf("File '%s' not found!\n", DISK_FILE_NAME);
-		return 0;
-	}
-	if (fread(disk, sizeof(Disk), 1, file) <= 0)
-		return 0;
-
-	fclose(file);
-	return 1;
+	printf(BOLDGREEN"The disk has been successfully formatted!\n"RESET);
 }
 
 Directory_block* allocation_block_directory(){

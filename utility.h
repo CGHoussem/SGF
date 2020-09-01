@@ -1,5 +1,5 @@
-#ifndef SAVE_LOAD_SGF
-#define SAVE_LOAD_SGF
+#ifndef UTILITY
+#define UTILITY
 
 #include "struct_SGF.h"
 

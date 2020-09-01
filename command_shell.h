@@ -39,7 +39,7 @@ bool isDiskFilled(Disk* disk, int size);
 int nb_arguments(char** parsedInput);
 // prints out the manual page of a specific command
 int print_manual(char* command);
-// functions handling each command
+// commands handling functions
 int handleCd(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
 int handleLn(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Inode** inodes_input,Disk* disk);
 int handleDf(char* input, char** parsedInput,Disk* disk);

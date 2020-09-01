@@ -1,20 +1,20 @@
 #ifndef CONSTANTS
 #define CONSTANTS
 
-#define DISK_FILE_NAME  "saved_disk.dat"
-#define MAX_FILE_NAME   24
-#define MAX_INPUT_SIZE   512
-#define BUFFER_SIZE     1024
-#define MAX_REDIRECTION_SIZE  4096
-#define SHELL_BUFFER_SIZE   64
-#define ASCII_OFFSET 48
-#define DISK_BYTES_LIMIT 1024000
+#define DISK_FILE_NAME          "saved_disk.dat"
+#define MAX_FILE_NAME           24
+#define MAX_INPUT_SIZE          512
+#define BUFFER_SIZE             1024
+#define MAX_REDIRECTION_SIZE    4096
+#define SHELL_BUFFER_SIZE       64
+#define ASCII_OFFSET            48
+#define DISK_BYTES_LIMIT        1024000
 
-#define TEXT 1
-#define BINARY 2
-#define DIRECTORY 3
+#define TEXT        1
+#define BINARY      2
+#define DIRECTORY   3
 
-#define RESET   "\033[0m"
+#define RESET   "\033[0m"       /* Resets the style */
 #define BLACK   "\033[30m"      /* Black */
 #define RED     "\033[31m"      /* Red */
 #define GREEN   "\033[32m"      /* Green */

@@ -117,7 +117,7 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
     } else if (strcmp(input, "man") == 0){
 		return handleMan(input, parsedInput);
 	} else if (strcmp(input, "help") == 0){
-        printf("Available commands: ls, touch, cp, mv, cd, rm, rmdir, cat, echo, chmod, df, ln, clear, man, exit\n");
+        printf(BOLDWHITE"Available commands:"RESET" ls, touch, cp, mv, cd, rm, rmdir, cat, echo, chmod, df, ln, clear, man, exit\n");
         free_input(input,parsedInput);
         return 1;
    
