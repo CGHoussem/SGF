@@ -221,13 +221,17 @@ void mywrite(Inode* inode,char* output,Disk* disk) {
 	DataBlock* db = inode->datablocks;
 	if (strlen(output) > BUFFER_SIZE) {
 		int blocks_to_allocate = strlen(output) / BUFFER_SIZE;
+		print_debug("There is %d blocks to allocate for '%s'", blocks_to_allocate, output);
+
 		if (strlen(output) % BUFFER_SIZE > 1)
 			blocks_to_allocate++;
 	
 		for (int i = 0; i < blocks_to_allocate-1; i++)
 		{
 			char* string = substring(output, -1 + i*BUFFER_SIZE, BUFFER_SIZE);
+			print_debug("saving datablock[%d].data = %s", i, string);
 			sprintf(db->data, "%s", string);
+			free(string);
 			if (db->next_block == NULL){
 				db->next_block = allocation_block_data();
 				db->next_block->prev_block = db;
@@ -236,11 +240,11 @@ void mywrite(Inode* inode,char* output,Disk* disk) {
 		}
 
 		char* string = substring(output, -1 + BUFFER_SIZE*(blocks_to_allocate-1), strlen(output)-BUFFER_SIZE*(blocks_to_allocate-1));
+		print_debug("last datablock.data = %s", string);
 		strcpy(db->data, string);
-		printf("written!\n");
+		free(string);
 	} else {
 		strcpy(db->data, output);
-		printf("written!\n");
 	}
 }
 
