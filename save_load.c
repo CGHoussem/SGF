@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "save_load.h"
-
+#include "utility.h"
 
 void save_disk(Disk* disk){
     JSON_Value* root_value = json_value_init_object();
@@ -48,7 +48,7 @@ JSON_Value* save_inode(Inode* inode){
 }
 
 void save_datablocks(JSON_Object* json_object, Inode* inode){
-    char* buffer = malloc(sizeof(char*) * 65556);
+    char* buffer = malloc(sizeof(char) * 65556);
     strcpy(buffer, "[");
     
     DataBlock* block = inode->datablocks;
@@ -57,12 +57,13 @@ void save_datablocks(JSON_Object* json_object, Inode* inode){
         strcat(buffer, block->data);
         strcat(buffer, "\"");
         
-        block = block->next_block;
-        if (block && block->next_block != NULL){
+        if (block->next_block != NULL){
             strcat(buffer, ",");
         }
+        block = block->next_block;
     }
     strcat(buffer, "]");
+    print_debug("datablock data buffer: %s", buffer);
     json_object_set_value(json_object, "datablock", json_parse_string(buffer));
     
     free(buffer);

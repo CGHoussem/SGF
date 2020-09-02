@@ -4,8 +4,8 @@
         "name": "root",
         "permissions": "rwxrw-r--",
         "type": 3,
-        "creation_date": 1598891825,
-        "modification_date": 1598891825,
+        "creation_date": 1599071113,
+        "modification_date": 1599071113,
         "dirblock": [
             {
                 "name": ".",
@@ -16,42 +16,22 @@
                 "inode_uid": 0
             },
             {
-                "name": "f",
+                "name": "world.txt",
                 "inode_uid": 1
-            },
-            {
-                "name": "dossier",
-                "inode_uid": 2
             }
         ]
     },
     "inode_1": {
         "uid": 1,
-        "name": "f",
+        "name": "world.txt",
         "permissions": "rwxrw-r--",
         "type": 1,
-        "creation_date": 1598891826,
-        "modification_date": 1598891826,
+        "creation_date": 1599071122,
+        "modification_date": 1599071122,
         "datablock": [
-            "hi "
-        ]
-    },
-    "inode_2": {
-        "uid": 2,
-        "name": "dossier",
-        "permissions": "rwxrw-r--",
-        "type": 3,
-        "creation_date": 1598953183,
-        "modification_date": 1598953183,
-        "dirblock": [
-            {
-                "name": ".",
-                "inode_uid": 2
-            },
-            {
-                "name": "..",
-                "inode_uid": 0
-            }
+            "hello my t",
+            "iny world ",
+            "i love you "
         ]
     }
 }
