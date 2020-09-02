@@ -6,7 +6,7 @@
 
 // ============ SECONDARY FUNCTIONS ============
 Inode* append_inode_to_disk(Disk* disk, Inode* inode);
-Inode* get_inode_by_uid(Disk* disk, uid_t uid);
+Inode* get_inode_by_uid(Disk* disk, int uid);
 
 DataBlock* append_datablock_to_list(DataBlock* list, DataBlock* block);
 // =============================================

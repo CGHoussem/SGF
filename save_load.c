@@ -157,7 +157,7 @@ Inode* load_incomplete_inode(JSON_Object* object, size_t index) {
     JSON_Object* inode_json_object = json_value_get_object(inode_json_value);
 
     Inode* inode = (Inode*) malloc(sizeof(Inode));
-    inode->uid = (uid_t) json_object_get_number(inode_json_object, "uid");
+    inode->uid = (int) json_object_get_number(inode_json_object, "uid");
     strcpy(inode->name, json_object_get_string(inode_json_object, "name"));
     strcpy(inode->permissions, json_object_get_string(inode_json_object, "permissions"));
     inode->type = (int)json_object_get_number(inode_json_object, "type");
@@ -179,7 +179,7 @@ void load_complete_inode(Disk* disk, JSON_Object* object, size_t index) {
     JSON_Object* inode_json_object = json_value_get_object(inode_json_value);
 
     // get the inode from the disk by its uid
-    uid_t inode_uid = (uid_t) json_object_get_number(inode_json_object, "uid");
+    int inode_uid = (int) json_object_get_number(inode_json_object, "uid");
     Inode* inode = get_inode_by_uid(disk, inode_uid);
 
     int type = (int)json_object_get_number(inode_json_object, "type");
@@ -265,14 +265,14 @@ Index load_index(Disk* disk, JSON_Object* object) {
     Index index;
 
     strcpy(index.name, json_object_get_string(object, "name"));
-    uid_t inode_id = (uid_t) json_object_get_number(object, "inode_uid");
+    int inode_id = (int) json_object_get_number(object, "inode_uid");
 
     index.inode = get_inode_by_uid(disk, inode_id);
 
     return index;
 }
 
-Inode* get_inode_by_uid(Disk* disk, uid_t uid){
+Inode* get_inode_by_uid(Disk* disk, int uid){
     Inode* inode = NULL;
     Inode* temp = disk->inodes;
 

@@ -3,6 +3,17 @@
 
 #include "struct_SGF.h"
 
+#define DEBUG 1
+
+// Macros
+#define print_info(msg, ...) printf(BOLDCYAN msg "\n"RESET, ##__VA_ARGS__);
+#define print_error(msg, ...) printf(BOLDRED msg "\n"RESET, ##__VA_ARGS__);
+
+#define print_debug(message, ...) \
+    do { if (DEBUG) fprintf(stderr, HIGHTLIGHT "[DEBUG] %s:%d:%s(): " message RESET"\n", __FILE__, \
+        __LINE__, __func__, __VA_ARGS__); } while (0);
+
+
 // Prototypes
 // Code SGF Methods
 void format_disk(Disk* disk); //disk initialization

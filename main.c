@@ -12,8 +12,8 @@ int main(int argc, char** argv){
 	int running = 1;
 	Disk* disk = (Disk*) malloc(sizeof(Disk));
 	disk->inodes = NULL;
-	
-	// system("clear");
+
+	system("clear");
 	load_disk(disk);
 	if (disk->inodes == NULL)
 		format_disk(disk);

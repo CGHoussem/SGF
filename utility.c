@@ -342,7 +342,7 @@ void update_tab_index(Inode* current_inode, Inode* inode_to_add){
 }
 
 void remove_tab_index(Inode* inode_to_remove, Inode* parent_inode, Disk* disk){
-	uid_t inode_uid = inode_to_remove->uid;
+	int inode_uid = inode_to_remove->uid;
 	
 	{ // delete the inode from the disk
 		char deleted = 0;

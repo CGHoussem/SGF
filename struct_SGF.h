@@ -40,7 +40,7 @@ struct DataBlock {
 };
 
 struct Inode {
-	uid_t uid;
+	int uid;
 
 	char name[MAX_FILE_NAME]; 		// name of the file
 	char permissions[10]; 			// rwxr--r--

@@ -1,8 +1,6 @@
 #ifndef CONSTANTS
 #define CONSTANTS
 
-#define DEBUG 1
-
 #define DISK_FILENAME          "disk.json"
 #define MAX_FILE_NAME           24
 #define MAX_INPUT_SIZE          512
