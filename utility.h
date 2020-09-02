@@ -3,13 +3,15 @@
 
 #include "struct_SGF.h"
 
-#define DEBUG 1
+#ifndef DEBUG
+#define DEBUG 0
+#endif
 
 // Macros
 #define print_info(msg, ...) printf(BOLDCYAN msg "\n"RESET, ##__VA_ARGS__);
 #define print_error(msg, ...) printf(BOLDRED msg "\n"RESET, ##__VA_ARGS__);
 
-#define print_debug(msg, ...) if (DEBUG) fprintf(stderr, HIGHTLIGHT "[DEBUG] %s:%d:%s(): " msg RESET"\n", __FILE__, __LINE__, __func__, __VA_ARGS__);
+#define print_debug(msg, ...) if (DEBUG) fprintf(stderr, HIGHTLIGHT "[DEBUG] %s:%d:%s(): " msg RESET"\n", __FILE__, __LINE__, __func__, ##__VA_ARGS__);
 
 
 // Prototypes

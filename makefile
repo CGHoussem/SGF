@@ -1,8 +1,12 @@
 CC = gcc
-CFLAGS = -Wall -Werror -g -std=c99
+CFLAGS = -std=c99
 OBJS = utility.o parson.o save_load.o primitives.o command_shell.o main.o
 
+all: CFLAGS += -D DEBUG=0
 all: program
+
+debug: CFLAGS += -Wall -Werror -g -D DEBUG=1
+debug: program
 
 program: $(OBJS)
 	$(CC) $(CFLAGS) -o program $(OBJS) -lm
