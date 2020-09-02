@@ -6,4 +6,4 @@
 program
 
 # Disk file
-*.dat
+*.json
