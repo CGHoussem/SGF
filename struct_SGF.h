@@ -16,6 +16,8 @@ typedef struct Disk Disk;
 struct Index {
 	char name[MAX_FILE_NAME];	// name of the index
 	Inode* inode; 				// inode pointed by the index
+
+	Index *next_index;			// pointer to next index in the list
 };
 
 enum BlockType {
@@ -25,22 +27,19 @@ enum BlockType {
 
 // Useless to be a list since we have indexes!
 struct DirectoryBlock {
-	Index* tab_index;				// list of indexes
-	int nb_index;					// number of indexes
+	Index* indexes;				// list of indexes
 
-	DirectoryBlock* prev_block;	// previous block
 	DirectoryBlock* next_block;	// next block
 };
 
 struct DataBlock {
 	char data[BUFFER_SIZE]; 	// content of the data block
 
-	DataBlock* prev_block;		// previous block
 	DataBlock* next_block;		// next block
 };
 
 struct Inode {
-	int uid;
+	unsigned long uid;
 
 	char name[MAX_FILE_NAME]; 		// name of the file
 	char permissions[10]; 			// rwxr--r--
@@ -50,7 +49,6 @@ struct Inode {
 	DataBlock* datablocks;			// the content of the file (if it is a file)
 	DirectoryBlock* dirblock;		// the available directories (if it is a directory)
 	
-	//Inode* prev_inode;				// previous inode in a list
 	Inode* next_inode; 				// next inode in a list
 };
 

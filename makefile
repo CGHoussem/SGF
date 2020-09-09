@@ -5,7 +5,7 @@ OBJS = utility.o parson.o save_load.o primitives.o command_shell.o main.o
 all: CFLAGS += -D DEBUG=0
 all: program
 
-debug: CFLAGS += -Wall -Werror -g -D DEBUG=1
+debug: CFLAGS += -Wall -g -D DEBUG=1 #-Werror
 debug: program
 
 program: $(OBJS)

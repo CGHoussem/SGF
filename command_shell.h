@@ -40,18 +40,19 @@ int nb_arguments(char** parsedInput);
 // prints out the manual page of a specific command
 int print_manual(char* command);
 // commands handling functions
-int handleCd(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
-int handleLn(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Inode** inodes_input,Disk* disk);
-int handleDf(char* input, char** parsedInput,Disk* disk);
-int handleChmod(char* input, char** parsedInput,Inode** current_inode,Inode** inodes_input,Disk* disk);
-int handleEcho(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
-int handleCat(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
-int handleRmdir(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Disk* disk);
-int handleRm(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Disk* disk);
-int handleMv(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Inode** inodes_input,Disk* disk);
-int handleCp(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Inode** inodes_input,Disk* disk);
-int handleTouch(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
-int handleLs(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
-int handleMkdir(char* input, char** parsedInput,Inode** current_inode,Disk* disk);
-int handleMan(char* input, char** parsedInput);
+void handleCd(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
+void handleLn(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Inode** inodes_input,Disk* disk);
+void handleDf(char* input, char** parsedInput,Disk* disk);
+void handleChmod(char* input, char** parsedInput,Inode** current_inode,Inode** inodes_input,Disk* disk);
+void handleEcho(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
+void handleCat(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
+void handleRmdir(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Disk* disk);
+void handleRm(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Disk* disk);
+void handleMv(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Inode** inodes_input,Disk* disk);
+void handleCp(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Inode** inodes_input,Disk* disk);
+void handleCp2(char** parsedInput, Inode* current_inode, Disk* disk);
+void handleTouch(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
+void handleLs(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);
+void handleMkdir(char* input, char** parsedInput,Inode** current_inode,Disk* disk);
+void handleMan(char* input, char** parsedInput);
 #endif

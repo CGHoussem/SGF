@@ -10,8 +10,8 @@ void save_disk(Disk* disk){
 
     Inode* inode = disk->inodes;
     while (inode != NULL){
-        char* inode_label = malloc(sizeof(char) * 16);
-        sprintf(inode_label, "inode_%d", inode->uid);
+        char* inode_label = malloc(sizeof(char) * 128);
+        sprintf(inode_label, "inode_%ld", inode->uid);
 
         JSON_Value* inode_json_value = save_inode(inode);
         
@@ -63,7 +63,6 @@ void save_datablocks(JSON_Object* json_object, Inode* inode){
         block = block->next_block;
     }
     strcat(buffer, "]");
-    print_debug("datablock data buffer: %s", buffer);
     json_object_set_value(json_object, "datablock", json_parse_string(buffer));
     
     free(buffer);
@@ -72,10 +71,12 @@ void save_datablocks(JSON_Object* json_object, Inode* inode){
 
 char* save_dirblock(Inode* inode, DirectoryBlock* dir_block){
     char* buffer = (char*) malloc(sizeof(char*) * 65556);
-    
     strcpy(buffer, "[");
-    for (int i = 0; i < dir_block->nb_index; i++){
-        JSON_Value* index_json_value = save_index(dir_block->tab_index[i]);
+    
+    Index* current_index = dir_block->indexes;
+
+    while (current_index != NULL) {
+        JSON_Value* index_json_value = save_index(current_index);
 
         char* serialized_string = json_serialize_to_string(index_json_value);
         strcat(buffer, serialized_string);
@@ -83,22 +84,21 @@ char* save_dirblock(Inode* inode, DirectoryBlock* dir_block){
         json_free_serialized_string(serialized_string);
         json_value_free(index_json_value);
 
-        if (i + 1 < dir_block->nb_index)
+        current_index = current_index->next_index;
+        if (current_index != NULL) 
             strcat(buffer, ",");
-           
     }
     strcat(buffer, "]");
     
-
     return buffer;
 }
 
-JSON_Value* save_index(Index index){
+JSON_Value* save_index(Index* index){
     JSON_Value* root_value = json_value_init_object();
     JSON_Object* root_object = json_value_get_object(root_value);
 
-    json_object_set_string(root_object, "name", index.name);
-    json_object_set_number(root_object, "inode_uid", index.inode->uid);
+    json_object_set_string(root_object, "name", index->name);
+    json_object_set_number(root_object, "inode_uid", index->inode->uid);
 
     return root_value;
 }
@@ -147,7 +147,6 @@ Inode* append_inode_to_disk(Disk* disk, Inode* inode){
             temp = temp->next_inode;
         }
 
-        //inode->prev_inode = temp;
         temp->next_inode = inode;
     }
     return disk->inodes;
@@ -158,13 +157,12 @@ Inode* load_incomplete_inode(JSON_Object* object, size_t index) {
     JSON_Object* inode_json_object = json_value_get_object(inode_json_value);
 
     Inode* inode = (Inode*) malloc(sizeof(Inode));
-    inode->uid = (int) json_object_get_number(inode_json_object, "uid");
+    inode->uid = (unsigned long) json_object_get_number(inode_json_object, "uid");
     strcpy(inode->name, json_object_get_string(inode_json_object, "name"));
     strcpy(inode->permissions, json_object_get_string(inode_json_object, "permissions"));
     inode->type = (int)json_object_get_number(inode_json_object, "type");
     inode->creation_date = (time_t)json_object_get_number(inode_json_object, "creation_date");
     inode->modification_date = (time_t)json_object_get_number(inode_json_object, "modification_date");
-    //inode->prev_inode = NULL;
     inode->next_inode = NULL;
 
     if (inode->type <= 2) {
@@ -180,7 +178,7 @@ void load_complete_inode(Disk* disk, JSON_Object* object, size_t index) {
     JSON_Object* inode_json_object = json_value_get_object(inode_json_value);
 
     // get the inode from the disk by its uid
-    int inode_uid = (int) json_object_get_number(inode_json_object, "uid");
+    unsigned long inode_uid = (unsigned long) json_object_get_number(inode_json_object, "uid");
     Inode* inode = get_inode_by_uid(disk, inode_uid);
 
     int type = (int)json_object_get_number(inode_json_object, "type");
@@ -195,55 +193,19 @@ DataBlock* load_datablocks(JSON_Object* json_object, Inode* inode) {
     
     if (block_count == 0) {
         return NULL;
-    } else {
-        #if DEBUG
-        printf(HIGHTLIGHT"there is %ld datablocks to be loaded from inode %d"RESET"\n", block_count, inode->uid);
-        #endif
     }
 
     DataBlock* blocks = NULL;
-    
     for (size_t i = 0; i < block_count; i++) {
         DataBlock* new_block = malloc(sizeof(DataBlock));
         
         strcpy(new_block->data, json_array_get_string(data_json_array, i));
-        new_block->prev_block = NULL;
         new_block->next_block = NULL;
         
         blocks = append_datablock_to_list(blocks, new_block);
     }
 
-    // #if DEBUG == 1
-    // DataBlock* current = blocks;
-    // int size = 0;
-    // while (current != NULL) {
-    //     size++;
-    //     printf(HIGHTLIGHT"datablock[data]: %s"RESET"\n", current->data);
-    //     current = current->next_block;
-    // }
-    // printf(HIGHTLIGHT"there is %d blocks!"RESET"\n", size);
-    // #endif
-
     return blocks;
-}
-
-DataBlock* append_datablock_to_list(DataBlock* list, DataBlock* block){
-    if (list == NULL){
-        list = block;
-
-    } else if (block != NULL) {
-        DataBlock* temp = list;
-
-        while (temp->next_block != NULL){
-            temp = temp->next_block;
-        }
-
-        block->prev_block = temp;
-        temp->next_block = block;
-
-        // TODO free?
-    }
-    return list;
 }
 
 DirectoryBlock* load_dirblocks(Disk* disk, JSON_Object* object, Inode* inode) {
@@ -251,29 +213,28 @@ DirectoryBlock* load_dirblocks(Disk* disk, JSON_Object* object, Inode* inode) {
     JSON_Array* indexes_json = json_object_get_array(object, "dirblock");
     
     size_t count = json_array_get_count(indexes_json);
-    block->nb_index = count;
-    block->tab_index = (Index*) malloc(sizeof(Index) * count);
+    block->indexes = NULL;
 
     for (size_t i = 0; i < count; i++){
         JSON_Object* index_json_object = json_array_get_object(indexes_json, i);
-        block->tab_index[i] = load_index(disk, index_json_object);
+        block->indexes = append_index_to_list(block->indexes, load_index(disk, index_json_object));
     }
 
     return block;
 }
 
-Index load_index(Disk* disk, JSON_Object* object) {
-    Index index;
+Index* load_index(Disk* disk, JSON_Object* object) {
+    Index* index = malloc(sizeof(Index));
 
-    strcpy(index.name, json_object_get_string(object, "name"));
-    int inode_id = (int) json_object_get_number(object, "inode_uid");
-
-    index.inode = get_inode_by_uid(disk, inode_id);
+    strcpy(index->name, json_object_get_string(object, "name"));
+    unsigned long inode_id = (unsigned long) json_object_get_number(object, "inode_uid");
+    index->inode = get_inode_by_uid(disk, inode_id);
+    index->next_index = NULL;
 
     return index;
 }
 
-Inode* get_inode_by_uid(Disk* disk, int uid){
+Inode* get_inode_by_uid(Disk* disk, unsigned long uid){
     Inode* inode = NULL;
     Inode* temp = disk->inodes;
 

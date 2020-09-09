@@ -6,9 +6,7 @@
 
 // ============ SECONDARY FUNCTIONS ============
 Inode* append_inode_to_disk(Disk* disk, Inode* inode);
-Inode* get_inode_by_uid(Disk* disk, int uid);
-
-DataBlock* append_datablock_to_list(DataBlock* list, DataBlock* block);
+Inode* get_inode_by_uid(Disk* disk, unsigned long uid);
 // =============================================
 
 void save_disk(Disk* disk);
@@ -24,7 +22,7 @@ DataBlock* load_datablocks(JSON_Object* json_object, Inode* inode);
 char* save_dirblock(Inode* inode, DirectoryBlock* dir_block);
 DirectoryBlock* load_dirblocks(Disk* disk, JSON_Object* object, Inode* inode);
 
-JSON_Value* save_index(Index index);
-Index load_index(Disk* disk, JSON_Object* object);
+JSON_Value* save_index(Index* index);
+Index* load_index(Disk* disk, JSON_Object* object);
 
 #endif

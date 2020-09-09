@@ -8,9 +8,43 @@
 #include "utility.h"
 #include "constants.h"
 
+/** List of commands [Error? | Memory Leak?]
+ * 1. ls 		[None | None]
+ * 1. ls > f	[NotImplemented]
+ * 2. touch 	[None | None]
+ * 3. cp		[ContentNotCopied | None]
+ * 4. mv		[377 Errors] -> Rework
+ * 5. cd		[None | None]
+ * 6. rm		[InvalidReadOfSize8 | BlocksInUse]
+ * 7. rmdir		[InvalidReadOfSize8 | BlocksInUse]
+ * 8. cat		[None | None]
+ * 9. echo		[None | None]
+ * 9. echo > f	[None | None]
+ * 9. echo >> f	[NotImplemented]
+ * 10. chmod	[None | None]
+ * 11. df		[ConditionalJump | BlocksInUse]
+ * 12. ln		[None | None]
+ * 13. clear	[None | None]
+ * 14. man		[None | BlocksInUse]
+ * 15. exit		[None | None]
+ * 16. mkdir 	[None [ None]
+ **/
+
+/** To be cleaned
+ * free_inode(...) utility.c
+ * load_datablocks(...) save_load.c
+ * append_datablock_to_list(...)  save_load.c
+ **/
+
+/** To fix
+ * Upon using 'rm' and when deleting the inode, REMEMBER to delete the datablocks
+ * 
+ * 
+ **/ 
+
 int main(int argc, char** argv){
 	int running = 1;
-	Disk* disk = (Disk*) malloc(sizeof(Disk));
+	Disk* disk = malloc(sizeof(Disk));
 	disk->inodes = NULL;
 
 	system("clear");

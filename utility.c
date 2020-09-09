@@ -8,43 +8,16 @@
 #include "utility.h"
 #include "constants.h"
 
-#if DEBUG == 1
 
-void dump_disk_inodes(Disk* disk) {
-	Inode* head = disk->inodes;
-	printf(HIGHTLIGHT"\n==========\n");
-	printf("DUMPING DISK\n");
-	printf("==========\n");
-	while (head != NULL) {
-		printf("Inode %d\n", head->uid);
-		head = head->next_inode;
+unsigned int count_indexes(DirectoryBlock* block) {
+	unsigned int size = 0;
+	Index* current = block->indexes;
+	while (current != NULL) {
+		size++;
+		current = current->next_index;
 	}
-	printf("=========="RESET"\n");
+	return size;
 }
-
-void dump_disk_indexes(Disk* disk) {
-	Inode* head = disk->inodes;
-	printf(HIGHTLIGHT"\n==========\n");
-	printf("DUMPING DISK\n");
-	printf("==========\n");
-	while (head != NULL) {
-		
-		printf("Inode %d\n", head->uid);
-
-		if (head->type == 3) {
-			for (int i = 0; head->dirblock != NULL && i < head->dirblock->nb_index; i++) {
-				printf("\tIndex: %s - %d\n", head->dirblock->tab_index[i].name, head->dirblock->tab_index[i].inode->uid);
-			}
-		} else {
-			printf(RED"\tNOT DIRECTORY!\n"HIGHTLIGHT);
-		}
-
-		head = head->next_inode;
-	}
-	printf("=========="RESET"\n");
-}
-
-#endif
 
 unsigned int count_inodes(Disk disk)
 {
@@ -108,27 +81,23 @@ unsigned int count_disk_dirblocks(Disk disk)
 
 void format_disk(Disk* disk){
 	disk->inodes = NULL;
-	mymkdir("root",disk,NULL);
+	mymkdir("root", disk, NULL);
 
 	printf(BOLDGREEN"The disk has been successfully formatted!\n"RESET);
 }
 
-DirectoryBlock* allocation_block_directory(){
-	DirectoryBlock* tab_block = NULL;
-	
-	tab_block= (DirectoryBlock*) malloc(sizeof(DirectoryBlock));
-	tab_block->prev_block = NULL;
+DirectoryBlock* allocate_directory_block(){
+	DirectoryBlock* tab_block = malloc(sizeof(DirectoryBlock));
 	tab_block->next_block = NULL;
 	
 	return tab_block;
 }
 
-DataBlock* allocation_block_data(){
+DataBlock* allocate_datablock(){
 	DataBlock* block = NULL;
 	
 	block = malloc(sizeof(DataBlock));
 	block->next_block = NULL;
-	block->prev_block = NULL;
 		
 	return block;
 }
@@ -136,32 +105,29 @@ DataBlock* allocation_block_data(){
 DataBlock* init_datablock() {
 	DataBlock *block = malloc(sizeof(DataBlock));
 	block->next_block = NULL;
-	block->prev_block = NULL;
 	return block;
 }
 
-void init_block_directory(DirectoryBlock* block, Inode* inode_directory, Inode* inode_parent_directory, Disk* disk){
+void init_directory_block(DirectoryBlock* block, Inode* inode_directory, Inode* inode_parent_directory, Disk* disk){
 	char name_parent_dir[] = "..";
 	char name_dir[] = ".";
 	
-	block->tab_index = NULL;
-	block->tab_index = allocation_index(2);
-	block->nb_index = 2;
-	
-	strcpy(block->tab_index[0].name,name_dir);
-	block->tab_index[0].inode=inode_directory;
-	
-	strcpy(block->tab_index[1].name,name_parent_dir);
-	block->tab_index[1].inode=inode_parent_directory;
+	block->indexes = NULL;
+
+	Index* index = malloc(sizeof(Index));
+	strcpy(index->name, name_dir);
+	index->inode = inode_directory;
+	index->next_index = NULL;
+	block->indexes = append_index_to_list(block->indexes, index);
+
+	Index* index2 = malloc(sizeof(Index));
+	strcpy(index2->name, name_parent_dir);
+	index2->inode = inode_parent_directory;
+	index2->next_index = NULL;
+	block->indexes = append_index_to_list(block->indexes, index2);
 	
 	block->next_block = NULL;
 	//add_dir_block(block, disk);
-}
-
-Index* allocation_index(int size){
-	Index* index = malloc(size*sizeof(Index));
-	
-	return index;
 }
 
 void init_permissions(char permissions[10]){
@@ -194,15 +160,12 @@ void free_inode(Inode* inode){
 		free_dirblock(inode->dirblock);
 		inode->dirblock = NULL;
 	} else {
-
-		if (inode->datablocks == NULL)
-			perror("NULL!");
-
 		while (inode->datablocks != NULL)
 		{
 			DataBlock* temp = inode->datablocks;
 			inode->datablocks = inode->datablocks->next_block;
 			free(temp);
+			temp = NULL;
 		}
 		free(inode->datablocks);
 		inode->datablocks = NULL;
@@ -210,9 +173,21 @@ void free_inode(Inode* inode){
 	free(inode);
 }
 
+void free_index(Index* index) {
+	while (index != NULL) {
+		Index* temp = index;
+		index = index->next_index;
+		free(temp);
+	}
+	free(index);
+	index = NULL;
+}
+
 void free_dirblock(DirectoryBlock* block){
-	free(block->tab_index);
+	free_index(block->indexes);
+
 	free(block);
+	block = NULL;
 }
 
 void free_datablock(DataBlock* block){
@@ -243,11 +218,9 @@ void add_inode(Inode* inode, Disk* disk){
 		Inode* last_inode = get_last_inode(*disk);
 		
 		last_inode->next_inode = inode;
-		//inode->prev_inode = last_inode;
 	}
 	else{
 		disk->inodes = inode;
-		//inode->prev_inode = NULL;
 	}
 	
 }
@@ -262,23 +235,6 @@ DirectoryBlock* get_last_dir_block(Disk disk){
 	return current_dir_block;
 }
 
-// TODO //add_dir_block to look into
-// void //add_dir_block(Directory_block* dir_block, Disk* disk){
-// 	if(disk->dir_blocks != NULL){
-// 		Directory_block* last_dir_block = get_last_dir_block(*disk);
-		
-// 		last_dir_block->next_block = dir_block;
-// 		dir_block->prev_block = last_dir_block;
-		
-// 		disk->nb_dir_blocks++;
-// 	}
-// 	else{
-// 		disk->dir_blocks = dir_block;
-// 		dir_block->prev_block = NULL;
-// 		disk->nb_dir_blocks = 1;
-// 	}
-// }
-	
 DataBlock* get_last_data_block(Disk disk){
 	DataBlock* current_data_block = disk.inodes[count_inodes(disk)-1].datablocks;
 	
@@ -296,144 +252,180 @@ DataBlock* get_last_inode_data_block(Inode* inode){
 	return temp;
 }
 
-// Todo: ////add_data_block to look into
-// void ////add_data_block(Data_block* data_block, Disk* disk){
-// 	if(disk->data_blocks != NULL){
-// 		Data_block* last_data_block = get_last_data_block(*disk);
-		
-// 		last_data_block->next_block = data_block;
-// 		data_block->prev_block = last_data_block;
-		
-// 		disk->nb_data_blocks++;
-// 	}
-// 	else{
-// 		disk->data_blocks = data_block;
-// 		data_block->prev_block = NULL;
-// 		disk->nb_data_blocks = 1;
-// 	}
-// }
+Index* append_index_to_list(Index* list, Index* index){
+    if (list == NULL){
+        list = index;
+    } else if (index != NULL) {
+        Index* temp = list;
 
-void update_tab_index(Inode* current_inode, Inode* inode_to_add){
-	Index* new_index = NULL;
-	int i;
-	
-	/////// DEBUG ////////
-	if (current_inode->dirblock == NULL){
-		fprintf(stderr, BOLDRED"System error!\n"RESET);
-		exit(EXIT_FAILURE);
-	}
-	//////////////////////
+        while (temp->next_index != NULL){
+            temp = temp->next_index;
+        }
 
-	new_index = allocation_index(current_inode->dirblock->nb_index+1);
-	
-	for(i=0;i<current_inode->dirblock->nb_index;i++){
-		new_index[i] = current_inode->dirblock->tab_index[i]; //copy the old index in the new one
-	}
-	
-	//add the directory at the end of the index
-	strcpy(new_index[current_inode->dirblock->nb_index].name,inode_to_add->name);
-	new_index[current_inode->dirblock->nb_index].inode = inode_to_add;
-	
-	free(current_inode->dirblock->tab_index);
-	current_inode->dirblock->tab_index = new_index;
-	
-	current_inode->dirblock->nb_index++;
-	
+        temp->next_index = index;
+    }
+    return list;
 }
 
+DataBlock* append_datablock_to_list(DataBlock* list, DataBlock* block){
+    if (list == NULL){
+        list = block;
+    } else if (block != NULL) {
+        DataBlock* temp = list;
+
+        while (temp->next_block != NULL){
+            temp = temp->next_block;
+        }
+
+        temp->next_block = block;
+    }
+    return list;
+}
+
+DataBlock* copy_datablock_list(DataBlock* source_list) {
+	if (source_list == NULL)
+		return NULL;
+
+	DataBlock* head = malloc(sizeof(DataBlock));
+	strcpy(head->data, source_list->data);
+
+	DataBlock* p = head;
+	source_list = source_list->next_block;
+	while (source_list != NULL) {
+		p->next_block = malloc(sizeof(DataBlock));
+		p = p->next_block;
+		strcpy(p->data, source_list->data);
+		source_list = source_list->next_block;
+	}
+
+	p->next_block = NULL;
+
+	return head;
+}
+
+void clear_datablocks(DataBlock* list) {
+	while (list != NULL) {
+		DataBlock* temp = list;
+		list = list->next_block;
+		free(temp);
+	}
+	free(list);
+	list = NULL;
+}
+
+void update_tab_index(Inode* current_inode, Inode* inode_to_add){	
+	if (current_inode->dirblock == NULL){
+		print_debug("system error!");
+		exit(EXIT_FAILURE);
+	}
+
+	Index* new_index = malloc(sizeof(Index));
+	strcpy(new_index->name, inode_to_add->name);
+	new_index->inode = inode_to_add;
+	new_index->next_index = NULL;
+	current_inode->dirblock->indexes = append_index_to_list(current_inode->dirblock->indexes, new_index);	
+}
+
+void delete_inode(Inode** head_ref, unsigned long inode_uid) {
+	Inode* temp = *head_ref;
+	Inode* prev = NULL;
+
+	if (temp != NULL && temp->uid == inode_uid) {
+		*head_ref = temp->next_inode;
+		free(temp);
+		return;
+	}
+
+	while (temp != NULL && temp->uid != inode_uid) {
+		prev = temp;
+		temp = temp->next_inode;
+	}
+
+	if (temp == NULL) return;
+
+	prev->next_inode = temp->next_inode;
+
+	free(temp);
+}
+
+void delete_index(Index** head_ref, const char* name) {
+	Index* temp = *head_ref;
+	Index* prev = NULL;
+
+	if (temp != NULL && strcmp(temp->name, name) == 0) {
+		*head_ref = temp->next_index;
+		free(temp);
+		return;
+	}
+
+	while (temp != NULL && strcmp(temp->name, name) != 0) {
+		prev = temp;
+		temp = temp->next_index;
+	}
+
+	if (temp == NULL) return;
+
+	prev->next_index = temp->next_index;
+
+	free(temp);
+}
+
+// TODO rework
 void remove_tab_index(Inode* inode_to_remove, Inode* parent_inode, Disk* disk){
-	int inode_uid = inode_to_remove->uid;
+	unsigned long inode_uid = inode_to_remove->uid;
+	char* index_name = NULL;
+	bool copied = false;
+
+	print_debug("to remove inode id: %ld", inode_uid);
 	
-	{ // delete the inode from the disk
-		char deleted = 0;
-		Inode* head = disk->inodes;
-		if (inode_uid == head->uid) {
-			// remove the inode from the disk!
-			Inode* temp = head;
-			head = head->next_inode;
-			free(temp);
-			deleted = 1;
-		}	
-
-		Inode* current = head->next_inode;
-		Inode* previous = head;
-		while (deleted == 0 && current != NULL && previous != NULL) {
-			if (inode_uid == current->uid) {
-				// remove the inode from the disk!
-				Inode* temp = current;
-				previous->next_inode = current->next_inode;
-				free(temp);
-				deleted = 1;
-			}
-			previous = current;
-			current = current->next_inode;
+	Index* current = parent_inode->dirblock->indexes;
+	while (copied == false && current != NULL) {
+		if (current->inode->uid == inode_uid){
+			index_name = malloc(sizeof(char) * strlen(current->inode->name)+1);
+			strcpy(index_name, current->inode->name);
+			copied = true;
 		}
+		current = current->next_index;
 	}
 
-	// TODO: TO REWORK !! (PERFORMANCE WASTE)
-	// waste of memory and performance, we shouldn't copy tab_index to be able to delete one index!
-	// todo: change tab_indexe from static table to a dynamic list!
+	delete_inode(&disk->inodes, inode_uid);
+	delete_index(&parent_inode->dirblock->indexes, index_name);
 
-	{ // delete the index from the dirblocks of the parent inode
-		Index* new_index = NULL;
-		int i;
-		int j = 0;
-		char delete = 0;
-
-		new_index = allocation_index(parent_inode->dirblock->nb_index-1);
-		
-		for(i=0;i<parent_inode->dirblock->nb_index;i++){
-			if(delete == 1 || parent_inode->dirblock->tab_index[i].inode->uid != inode_uid) {
-				new_index[j] = parent_inode->dirblock->tab_index[i]; //copy the old index in the new one without the inode to remove
-				j++;
-			} else {
-				delete = 1;
-			}
-		}
-		
-		free(parent_inode->dirblock->tab_index);
-		parent_inode->dirblock->tab_index = new_index;
-		
-		parent_inode->dirblock->nb_index--;
-	}
-
-	#if DEBUG == 1
-	dump_disk_indexes(disk);
-	#endif
+	free(index_name);
 }
 
 Inode* search_file_in_directory(char* file_name,DirectoryBlock* directory) {
-	int i;
-	
+	Inode* file = NULL;
 	if(directory != NULL) {
-		for(i=0;i<directory->nb_index;i++) {
-			if(strcmp(directory->tab_index[i].name,file_name) == 0) {
-				return directory->tab_index[i].inode;
+		Index* current = directory->indexes;
+		while (file == NULL && current != NULL) {
+			if(strcmp(current->name,file_name) == 0) {
+				file = current->inode;
 			}
+			current = current->next_index;
 		}
 	}
-	return NULL;
+	return file;
 }
 
 Inode* search_parent_inode(Inode* inode,Disk* disk) {
 	Inode* parent_inode = disk->inodes;
-	DirectoryBlock* directory;
-	int i;
+	Inode* ret = NULL;
 	
 	while(parent_inode != NULL) {
 		if(parent_inode->dirblock != NULL) {
-			directory = parent_inode->dirblock;
-			if(directory->nb_index > 2) {
-				for(i=0;i<directory->nb_index;i++) {
-					if(directory->tab_index[i].inode == inode) {
-						return parent_inode;
-					}
+			DirectoryBlock* directory = parent_inode->dirblock;
+			Index* current = directory->indexes;
+			while (ret == NULL && current != NULL) {
+				if (current->inode->uid == inode->uid) {
+					ret = parent_inode;
 				}
+				current = current->next_index;
 			}
 		}
 		parent_inode = parent_inode->next_inode;
 	}
-	return NULL;
+	return ret;
 }
 					
 char* substring(char* string, int position, int length){
@@ -441,12 +433,6 @@ char* substring(char* string, int position, int length){
 	int c;
 
 	pointer = malloc(length+1);
-
-	if (pointer == NULL)
-	{
-		printf(BOLDRED"ERROR: Unable to allocate memory.\n"RESET);
-		exit(1);
-	}
 
 	for (c = 0; c < length; c++)
 	{
