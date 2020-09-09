@@ -332,7 +332,7 @@ void delete_inode(Inode** head_ref, unsigned long inode_uid) {
 
 	if (temp != NULL && temp->uid == inode_uid) {
 		*head_ref = temp->next_inode;
-		free(temp);
+		free_inode(temp);
 		return;
 	}
 
@@ -345,7 +345,7 @@ void delete_inode(Inode** head_ref, unsigned long inode_uid) {
 
 	prev->next_inode = temp->next_inode;
 
-	free(temp);
+	free_inode(temp);
 }
 
 void delete_index(Index** head_ref, const char* name) {
@@ -370,7 +370,6 @@ void delete_index(Index** head_ref, const char* name) {
 	free(temp);
 }
 
-// TODO rework
 void remove_tab_index(Inode* inode_to_remove, Inode* parent_inode, Disk* disk){
 	unsigned long inode_uid = inode_to_remove->uid;
 	char* index_name = NULL;

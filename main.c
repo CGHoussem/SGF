@@ -12,10 +12,10 @@
  * 1. ls 		[None | None]
  * 1. ls > f	[NotImplemented]
  * 2. touch 	[None | None]
- * 3. cp		[ContentNotCopied | None]
+ * 3. cp		[None| None]
  * 4. mv		[377 Errors] -> Rework
  * 5. cd		[None | None]
- * 6. rm		[InvalidReadOfSize8 | BlocksInUse]
+ * 6. rm		[None | None]
  * 7. rmdir		[InvalidReadOfSize8 | BlocksInUse]
  * 8. cat		[None | None]
  * 9. echo		[None | None]
