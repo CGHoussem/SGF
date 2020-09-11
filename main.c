@@ -22,7 +22,7 @@
  * 9. echo > f	[None | None]
  * 9. echo >> f	[NotImplemented]
  * 10. chmod	[None | None]
- * 11. df		[ConditionalJump | BlocksInUse]
+ * 11. df		[ConditionalJump | None]
  * 12. ln		[None | None]
  * 13. clear	[None | None]
  * 14. man		[None | None]
