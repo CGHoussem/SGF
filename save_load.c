@@ -164,11 +164,12 @@ Inode* load_incomplete_inode(JSON_Object* object, size_t index) {
     inode->creation_date = (time_t)json_object_get_number(inode_json_object, "creation_date");
     inode->modification_date = (time_t)json_object_get_number(inode_json_object, "modification_date");
     inode->next_inode = NULL;
+    inode->datablocks = NULL;
+    inode->dirblock = NULL;
 
     if (inode->type <= 2) {
         inode->datablocks = load_datablocks(inode_json_object, inode);
     }
-    inode->dirblock = NULL;
 
     return inode;
 }
@@ -214,7 +215,8 @@ DirectoryBlock* load_dirblocks(Disk* disk, JSON_Object* object, Inode* inode) {
     
     size_t count = json_array_get_count(indexes_json);
     block->indexes = NULL;
-
+    block->next_block = NULL;
+    
     for (size_t i = 0; i < count; i++){
         JSON_Object* index_json_object = json_array_get_object(indexes_json, i);
         block->indexes = append_index_to_list(block->indexes, load_index(disk, index_json_object));
