@@ -25,7 +25,7 @@
  * 11. df		[ConditionalJump | BlocksInUse]
  * 12. ln		[None | None]
  * 13. clear	[None | None]
- * 14. man		[None | BlocksInUse]
+ * 14. man		[None | None]
  * 15. exit		[None | None]
  * 16. mkdir 	[None [ None]
  **/
