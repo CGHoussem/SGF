@@ -16,7 +16,7 @@
  * 4. mv		[377 Errors] -> Rework
  * 5. cd		[None | None]
  * 6. rm		[None | None]
- * 7. rmdir		[InvalidReadOfSize8 | BlocksInUse]
+ * 7. rmdir		[None | None]
  * 8. cat		[None | None]
  * 9. echo		[None | None]
  * 9. echo > f	[None | None]
