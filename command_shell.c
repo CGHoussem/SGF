@@ -77,7 +77,9 @@ int executeLine(Disk* disk, char* input,Inode** current_inode){
 		handleCp2(parsedInput, *current_inode, disk);
     } else if (strcmp(input, "mv") == 0){
 		handleMv(input, parsedInput, current_inode, inode_and_parent, inodes_input, disk);
-    } else if (strcmp(input, "cd") == 0){
+    } else if (strcmp(input, "mv2") == 0) {
+		handleMv2(parsedInput, *current_inode, disk);
+	} else if (strcmp(input, "cd") == 0){
 		handleCd(input, parsedInput, current_inode, inode, disk);
     } else if (strcmp(input, "rm") ==0){
 		handleRm(input, parsedInput, current_inode, inode_and_parent, disk);
@@ -785,6 +787,127 @@ void handleRm(char* input, char** parsedInput,Inode** current_inode,Inode** inod
 			free(inode_and_parent);
 		}
 		i++;
+	}
+}
+
+void handleMv2(char** parsedInput, Inode* current_inode, Disk* disk){
+	int nb_args = count_path(parsedInput);
+	char* source_filename = NULL;
+	char* destination_filename = NULL;
+	if (nb_args == 2) {
+		source_filename = malloc(sizeof(char) * strlen(parsedInput[1])+1);
+		strcpy(source_filename, parsedInput[1]);
+		
+		destination_filename = malloc(sizeof(char) * strlen(parsedInput[2])+1);
+		strcpy(destination_filename, parsedInput[2]);
+	}
+	
+	switch (nb_args) {
+		case 0: // error: mv
+			print_error("mv: missing file operand");
+		break;
+		case 1: // error: mv file1
+			print_error("mv: missing destination file operand after '%s'", source_filename);
+		break;
+		/**
+		 * Error checking:
+		 * mv2 f1 f1			[CHECK]
+		 * mv2 f1 docs			[UNCHECK] --> it function like cp2 f1 docs/
+		 * Good usage:
+		 * mv2 f1 f2 			[CHECK]
+		 * mv2 f1 docs/f2 		[CHECK]
+		 * mv2 f1 docs/			[CHECK]
+		 * mv2 docs/f1 f2		[CHECK]
+		 * mv2 docs/f1 docs/f2	[CHECK]
+		 **/ 
+		case 2: // move a single file
+			if (strcmp(source_filename, destination_filename) == 0){ // error: mv file1 file1
+				print_error("mv: '%s' and '%s' are the same file", source_filename, source_filename);
+			} else {
+
+
+				Inode* source_inode = path_to_inode(source_filename, current_inode, disk);
+				Inode* destination_inode = path_to_inode(parsedInput[2], current_inode, disk); // used parsedInput[2] to not lose data
+
+				if (source_inode == NULL){
+					print_error("mv: cannot stat '%s': No such file or directory", source_filename);
+				} else if (destination_inode != NULL) {
+					if (destination_inode->type != DIRECTORY) {
+						// replace the destination_inode datablock by the source_inode datablock
+						mycp2(source_inode, destination_inode);
+					} else {
+						// make a clean new copy of the source_inode
+						// create the file with the same filename of source_inode into destination_inode (directory)
+						Inode* created_inode = mycreate(source_inode->name, disk, destination_inode);
+						mycp2(source_inode, created_inode);
+					}
+					myrm(source_inode, current_inode, disk);
+				} else {
+					// create the destination file (inode)
+					Inode** dest_parent = path_to_destination_and_parent(destination_filename, current_inode, disk);
+					if (dest_parent[0] == NULL || dest_parent[1] == NULL){
+						print_error("mv: cannot create regular file '%s': No such file or directory", destination_filename);
+					} else {
+						mycp2(source_inode, dest_parent[0]);
+						myrm(source_inode, current_inode, disk);
+					}
+					free(dest_parent);
+				}
+			}
+			free(source_filename);
+			free(destination_filename);
+		break;
+		/**
+		 * cp2 f1 f2 docs/		[CHECK]
+		 * cp2 f1 docs/f2 docs/	[CHECK]
+		 **/ 
+		default: // copy multiple files to a directory
+			{
+				char** src_filenames = (char**) malloc(sizeof(char*) * nb_args);
+				char* dest_directory = parsedInput[nb_args];
+
+				// Getting the source filenames
+				for (int i = 1 ; i < nb_args; i++) {
+					src_filenames[i-1] = malloc(sizeof(char) * strlen(parsedInput[i]) + 1);
+					strcpy(src_filenames[i-1], parsedInput[i]);
+				}
+				src_filenames[nb_args -1] = NULL;
+				
+				// Getting the directory inode
+				Inode* dir_inode = path_to_inode(dest_directory, current_inode, disk);
+				if (dir_inode == NULL) {
+					print_error("cp: cannot create regular file '%s': Not a directory", dest_directory);
+				} else if (dir_inode->type != DIRECTORY) {
+					print_error("cp: target '%s' is not a directory", dest_directory);
+				} else {
+					// Start of the copy process of all files
+					for (int i = 0 ; i < nb_args - 1; i++) {
+						Inode* file_inode = path_to_inode(src_filenames[i], current_inode, disk);
+						// Checking the existance of the source files
+						if (file_inode == NULL) {
+							print_error("cp: cannot stat '%s': No such file or directory", src_filenames[i]);
+						} else {
+							// Check there is a file with the same name as file_inode in dir_inode
+							Inode* searched_inode = search_file_in_directory(file_inode->name, dir_inode->dirblock);
+							if (searched_inode == NULL){
+								// Create the file (destination inode)
+								Inode* created_inode = mycreate(file_inode->name, disk, dir_inode);
+								mycp2(file_inode, created_inode);
+							} else {
+								mycp2(file_inode, searched_inode);
+							}
+							myrm(file_inode, current_inode, disk);
+						}
+					}	
+				}
+
+				// freeing source filenames
+				for (int i = 0 ; i < nb_args - 1; i++) {
+					free(src_filenames[i]);
+				}
+				free(src_filenames);
+			}
+		break;
 	}
 }
 

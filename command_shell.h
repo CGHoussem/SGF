@@ -49,6 +49,7 @@ void handleCat(char* input, char** parsedInput,Inode** current_inode,Inode* inod
 void handleRmdir(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Disk* disk);
 void handleRm(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Disk* disk);
 void handleMv(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Inode** inodes_input,Disk* disk);
+void handleMv2(char** parsedInput, Inode* current_inode, Disk* disk);
 void handleCp(char* input, char** parsedInput,Inode** current_inode,Inode** inode_and_parent,Inode** inodes_input,Disk* disk);
 void handleCp2(char** parsedInput, Inode* current_inode, Disk* disk);
 void handleTouch(char* input, char** parsedInput,Inode** current_inode,Inode* inode,Disk* disk);

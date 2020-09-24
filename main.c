@@ -13,7 +13,7 @@
  * 1. ls > f	[NotImplemented]
  * 2. touch 	[None | None]
  * 3. cp		[None| None]
- * 4. mv		[377 Errors] -> Rework
+ * 4. mv		[None | None]
  * 5. cd		[None | None]
  * 6. rm		[None | None]
  * 7. rmdir		[None | None]
@@ -30,16 +30,9 @@
  * 16. mkdir 	[None [ None]
  **/
 
-/** To be cleaned
- * free_inode(...) utility.c
- * load_datablocks(...) save_load.c
- * append_datablock_to_list(...)  save_load.c
- **/
-
-/** To fix
- * Upon using 'rm' and when deleting the inode, REMEMBER to delete the datablocks
- * 
- * 
+/** To implement
+ * ls > f
+ * echo >> f
  **/ 
 
 int main(int argc, char** argv){
