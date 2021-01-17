@@ -12,9 +12,9 @@ char* readline(){
     int pos = 0;
     char c;
 
-    while ((c = getchar()) != '\n' && c != EOF){
-        input[pos++] = c;
-    }
+	while ((c = fgetc(stdin)) != 0x0A) {
+		input[pos++] = c;
+	}
     input[pos] = '\0';
 
 	input = ltrim(input, NULL);
